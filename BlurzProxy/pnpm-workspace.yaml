@@ -1,0 +1,3 @@
+allowBuilds:
+  '@useinterstellar/scramjet': false
+  bufferutil: false

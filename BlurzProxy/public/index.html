@@ -1,0 +1,398 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlurzProxy</title>
+
+  <link rel="icon" type="image/svg+xml" href="/star.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080812;
+      color: white;
+      font-family: Inter, sans-serif;
+    }
+
+    header {
+      padding: 16px 25px;
+      border-bottom: 1px solid #28213d;
+    }
+
+    header h2 {
+      font-family: Orbitron, sans-serif;
+      color: #a855f7;
+    }
+
+    .home {
+      text-align: center;
+      padding: 90px 20px;
+    }
+
+    .home h1 {
+      font: 900 65px Orbitron, sans-serif;
+      color: #a855f7;
+    }
+
+    #proxy-form {
+      display: flex;
+      max-width: 650px;
+      margin: 30px auto;
+      gap: 10px;
+    }
+
+    input {
+      background: #171526;
+      border: 1px solid #49316b;
+      color: white;
+      padding: 14px;
+      border-radius: 9px;
+      outline: none;
+    }
+
+    #url-input {
+      flex: 1;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 17px;
+      background: #9333ea;
+      color: white;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #a855f7;
+    }
+
+    .browser {
+      margin: 20px;
+      border: 1px solid #302344;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #10101d;
+      min-height: 75vh;
+      width: min(1400px, calc(100% - 40px));
+      height: calc(100vh - 110px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      padding: 10px;
+      background: #171526;
+      border-bottom: 1px solid #302344;
+    }
+
+    #tab-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .tab-item {
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
+      border-radius: 8px;
+      background: #292039;
+    }
+
+    .tab-item.active {
+      background: #49316b;
+    }
+
+    .tab {
+      background: transparent;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .tab-close {
+      padding: 6px 9px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: #11101c;
+      flex: 0 0 auto;
+    }
+
+    .toolbar input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toolbar button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .browser-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 210px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #browser-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      padding: 0;
+      overflow: auto;
+      text-align: center;
+      color: #aaa;
+      scrollbar-width: thin;
+      scrollbar-color: #6b4d91 #171526;
+    }
+
+    #frame-host {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #6b4d91 #171526;
+    }
+
+    .browser-frame {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .browser-frame[hidden] {
+      display: none;
+    }
+
+    .browser-frame iframe {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      border: 0;
+      background: white;
+    }
+
+    #browser-sidebar {
+      overflow-y: auto;
+      padding: 16px 12px;
+      background: #12111f;
+      border-left: 1px solid #302344;
+      text-align: left;
+    }
+
+    #browser-sidebar h3 {
+      margin: 0 0 12px;
+      color: #c4b5fd;
+      font: 600 13px Inter, sans-serif;
+    }
+
+    .site-link {
+      display: block;
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      text-align: left;
+      background: #201b31;
+      box-shadow: none;
+    }
+
+    .site-link span {
+      display: block;
+      margin-top: 3px;
+      color: #b7aecb;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    #browser:fullscreen {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+    }
+
+    #browser-content h2 {
+      color: #a855f7;
+      font-family: Orbitron, sans-serif;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      .toolbar {
+        flex-wrap: wrap;
+      }
+
+      .toolbar input {
+        flex-basis: 100%;
+        order: 2;
+      }
+
+      .browser {
+        width: calc(100% - 20px);
+        height: calc(100vh - 100px);
+        min-height: 400px;
+        margin: 10px;
+      }
+
+      .browser-workspace {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+
+      #browser-sidebar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 8px;
+        border-top: 1px solid #302344;
+        border-left: 0;
+      }
+
+      #browser-sidebar h3 {
+        flex: 0 0 auto;
+        margin: 0 5px;
+      }
+
+      .site-link {
+        flex: 0 0 auto;
+        width: auto;
+        margin: 0;
+      }
+
+      .site-link span {
+        display: none;
+      }
+
+      .home h1 {
+        font-size: 42px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>BLURZ</h2>
+  </header>
+
+  <main>
+    <section class="home" id="home">
+      <h1>BLURZ</h1>
+      <p>YOUR GATEWAY TO THE DIGITAL UNIVERSE</p>
+
+      <form id="proxy-form">
+        <input
+          id="url-input"
+          type="text"
+          placeholder="Search or enter a website..."
+          autocomplete="off"
+          required
+        >
+        <button type="submit">Go</button>
+      </form>
+
+      <div id="message"></div>
+      <div class="engine-status">
+        <span class="status-dot"></span>
+        <span class="engine-status-text">Starting browser engine...</span>
+        <p class="engine-description">Initializing secure browser workspace.</p>
+      </div>
+    </section>
+
+    <section class="browser" id="browser" hidden>
+      <div class="tabs">
+        <div id="tab-list" role="tablist" aria-label="Browser tabs"></div>
+        <button type="button" id="new-tab" aria-label="New tab" title="New tab">+</button>
+      </div>
+
+      <div class="toolbar browser-toolbar">
+        <button type="button" id="home-button" aria-label="New tab page" title="New tab page">⌂</button>
+        <button type="button" id="back-button" aria-label="Back" title="Back">←</button>
+        <button type="button" id="forward-button" aria-label="Forward" title="Forward">→</button>
+        <button type="button" id="reload-button" aria-label="Reload" title="Reload">↻</button>
+
+        <input
+          id="current-address"
+          type="text"
+          placeholder="Search or enter address..."
+        >
+
+        <button type="button" id="navigate-button">Go</button>
+        <button type="button" id="fullscreen-button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button>
+      </div>
+
+      <div class="browser-workspace">
+        <div id="browser-content">
+          <div class="engine-status">
+            <span class="status-dot"></span>
+            <span class="engine-status-text">Starting browser engine...</span>
+            <p class="engine-description">Initializing secure browser workspace.</p>
+          </div>
+
+          <div class="browser-welcome" id="browser-welcome">
+            <h2>BLURZ</h2>
+            <p>YOUR DIGITAL UNIVERSE</p>
+            <p>Choose a popular site or enter an address above.</p>
+          </div>
+
+          <div id="frame-host"></div>
+        </div>
+
+        <aside id="browser-sidebar" aria-label="Popular sites">
+          <h3>Popular sites</h3>
+          <button type="button" class="site-link" data-url="https://poki.com/">Poki<span>Quick games</span></button>
+          <button type="button" class="site-link" data-url="https://www.coolmathgames.com/">Coolmath Games<span>Puzzles and games</span></button>
+          <button type="button" class="site-link" data-url="https://www.crazygames.com/">CrazyGames<span>Online games</span></button>
+          <button type="button" class="site-link" data-url="https://www.youtube.com/">YouTube<span>Videos</span></button>
+          <button type="button" class="site-link" data-url="https://www.google.com/">Google<span>Search</span></button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script src="/vendor/scramjet/scramjet.all.js"></script>
+  <script src="/vendor/bare-mux/index.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
