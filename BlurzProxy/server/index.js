@@ -6,10 +6,17 @@ const { server: wisp } = require("@mercuryworkshop/wisp-js/server");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || "0.0.0.0";
 
+if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) {
+  throw new RangeError("PORT must be an integer between 0 and 65535.");
+}
+
+app.disable("x-powered-by");
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "../public")));
 
 const packages = [
@@ -24,7 +31,8 @@ const packages = [
 function checkPackage(name) {
   try {
     const packagePath = path.join(
-      process.cwd(),
+      __dirname,
+      "..",
       "node_modules",
       name,
       "package.json"
@@ -51,6 +59,22 @@ app.get("/api/status", (req, res) => {
     name: "BlurzProxy",
     status: "online",
     version: "1.0.0"
+  });
+});
+
+app.get("/healthz", (req, res) => {
+  res.json({
+    name: "BlurzProxy",
+    status: "ok",
+    uptime: process.uptime()
+  });
+});
+
+app.get("/readyz", (req, res) => {
+  res.json({
+    name: "BlurzProxy",
+    ready: true,
+    status: "online"
   });
 });
 
@@ -81,9 +105,61 @@ app.use(
   )
 );
 
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`BlurzProxy running on port ${PORT}`);
+app.use((error, req, res, next) => {
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+
+  const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500
+    ? error.status
+    : 500;
+  if (status >= 500) {
+    console.error("Internal HTTP request error.");
+  }
+
+  const message = status === 413
+    ? "Request body exceeds the 1 MB limit."
+    : status === 400
+      ? "Invalid request body."
+      : "Request failed.";
+  res.status(status).json({ error: message });
 });
+
+const server = app.listen(PORT, HOST, () => {
+  const address = server.address();
+  const port = address && typeof address === "object" ? address.port : PORT;
+  console.log(`BlurzProxy running on ${HOST}:${port}`);
+});
+
+server.on("error", (error) => {
+  console.error(`BlurzProxy failed to start: ${error.message}`);
+  process.exitCode = 1;
+});
+
+server.keepAliveTimeout = 15000;
+server.headersTimeout = 20000;
+server.requestTimeout = 20000;
+server.setTimeout(20000);
+
+let shuttingDown = false;
+
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`Received ${signal}; shutting down gracefully.`);
+  server.close(() => {
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.log("Forced shutdown after timeout.");
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
 
 server.on("upgrade", (request, socket, head) => {
   if (request.url?.split("?")[0] !== "/wisp/") {

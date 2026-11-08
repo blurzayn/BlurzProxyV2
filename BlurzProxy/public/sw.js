@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "blurz-app-v10";
+const CACHE_NAME = "blurz-app-v11";
 
 const APP_FILES = [
   "/",

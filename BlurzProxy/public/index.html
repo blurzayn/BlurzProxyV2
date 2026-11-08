@@ -39,7 +39,7 @@
       --space-base: #020812;
       --space-mid: #06172a;
       --accent: #38bdf8;
-      --accent-strong: #0284c7;
+      --accent-strong: #0369a1;
       --accent-light: #bae6fd;
       --accent-muted: #a8c9d8;
       --scrollbar: #28799c;
@@ -65,7 +65,7 @@
       --space-base: #0c0602;
       --space-mid: #1b1006;
       --accent: #fb923c;
-      --accent-strong: #ea580c;
+      --accent-strong: #c2410c;
       --accent-light: #fed7aa;
       --accent-muted: #d7b99d;
       --scrollbar: #a85e28;
@@ -78,7 +78,7 @@
       --space-base: #0c0a02;
       --space-mid: #1b1606;
       --accent: #facc15;
-      --accent-strong: #ca8a04;
+      --accent-strong: #a16207;
       --accent-light: #fef08a;
       --accent-muted: #d7ce9d;
       --scrollbar: #a88928;
@@ -91,14 +91,14 @@
       --space-base: #020c08;
       --space-mid: #061b12;
       --accent: #4ade80;
-      --accent-strong: #16a34a;
+      --accent-strong: #15803d;
       --accent-light: #bbf7d0;
       --accent-muted: #a8d8b8;
       --scrollbar: #288c50;
     }
 
     :root[data-custom-accent="true"] {
-      --accent-strong: color-mix(in srgb, var(--accent) 78%, black);
+      --accent-strong: color-mix(in srgb, var(--accent) 50%, black);
       --accent-light: color-mix(in srgb, var(--accent) 55%, white);
       --accent-muted: color-mix(in srgb, var(--accent) 65%, white);
       --scrollbar: var(--accent);
@@ -106,6 +106,23 @@
 
     * {
       box-sizing: border-box;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--accent-light);
+      outline-offset: 2px;
     }
 
     body {
@@ -462,6 +479,23 @@
       color: #fecdd3;
     }
 
+    .proxy-recovery {
+      display: flex;
+      flex-basis: 100%;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      color: #fecdd3;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .proxy-recovery button {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
     .home h1 {
       font: 900 65px Orbitron, sans-serif;
       color: var(--accent);
@@ -491,7 +525,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 42px;
+      min-height: 44px;
       padding: 0 16px;
       cursor: pointer;
       border: 0;
@@ -503,7 +537,7 @@
     }
 
     button:hover {
-      background: var(--accent);
+      background: color-mix(in srgb, var(--accent-strong) 85%, black);
     }
 
     button:disabled {
@@ -771,6 +805,11 @@
         font-size: 10px;
       }
 
+      .proxy-recovery {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
       .toolbar input {
         flex-basis: 100%;
         order: 2;
@@ -785,7 +824,7 @@
         order: 1;
         flex: 1 1 44px;
         min-width: 0;
-        min-height: 42px;
+        min-height: 44px;
         padding: 0 8px;
       }
 
@@ -793,14 +832,14 @@
         order: 2;
         flex: 1 1 calc(100% - 108px);
         width: auto;
-        min-height: 42px;
+        min-height: 44px;
         padding: 10px;
       }
 
       .browser-toolbar #navigate-button {
         order: 3;
         flex: 0 0 56px;
-        min-height: 42px;
+        min-height: 44px;
         padding: 0 10px;
       }
 
@@ -882,6 +921,7 @@
     <div class="proxy-status" id="proxy-status" data-state="checking" role="status" aria-live="polite">
       <span class="proxy-status-dot"></span>
       <span id="proxy-status-text">Checking proxy…</span>
+      <button type="button" id="proxy-retry" hidden>Retry</button>
     </div>
     <div class="settings">
       <button
@@ -894,12 +934,12 @@
         <fieldset class="settings-section">
           <label for="theme-select">Space theme</label>
           <select id="theme-select">
-            <option value="purple">Purple space</option>
-            <option value="blue">Blue space</option>
             <option value="red">Red space</option>
             <option value="orange">Orange space</option>
             <option value="yellow">Yellow space</option>
             <option value="green">Green space</option>
+            <option value="blue">Blue space</option>
+            <option value="purple" selected>Purple space</option>
           </select>
           <label class="accent-color-label" for="accent-color-picker">Custom accent color</label>
           <input type="color" id="accent-color-picker" value="#a855f7" aria-describedby="accent-color-description">
@@ -916,13 +956,9 @@
         </fieldset>
 
         <fieldset class="settings-section">
-          <label for="startup-page-select">Startup page</label>
-          <select id="startup-page-select">
-            <option value="home">Home</option>
-            <option value="last">Last visited site</option>
-            <option value="restore">Restore open tabs</option>
-          </select>
-          <p class="setting-description">Open tabs are automatically recovered after a refresh or unexpected close. This setting controls the startup page when there are no tabs to recover.</p>
+          <legend>Startup</legend>
+          <p class="setting-description">BlurzProxy always opens on the homepage. Restore your previous tabs only when you choose.</p>
+          <button type="button" class="settings-action" id="restore-open-tabs" disabled>Restore previous tabs</button>
         </fieldset>
 
         <fieldset class="settings-section">
@@ -961,7 +997,7 @@
 
         <fieldset class="settings-section">
           <legend>Recent history</legend>
-          <div id="recent-history-list" aria-label="Recently visited websites" aria-live="polite"></div>
+          <div id="recent-history-list" role="region" aria-label="Recently visited websites" aria-live="polite"></div>
           <p class="list-empty" id="recent-history-empty">Websites you visit will appear here.</p>
           <button type="button" class="settings-action" id="clear-history">Clear browsing history</button>
           <label class="setting-check" for="clear-history-on-exit">
@@ -1025,6 +1061,7 @@
         <p class="settings-message" id="settings-message" role="status" hidden></p>
       </div>
     </div>
+    <p class="proxy-recovery" id="proxy-recovery" role="status" hidden></p>
   </header>
 
   <main>
@@ -1033,6 +1070,7 @@
       <p>YOUR GATEWAY TO THE DIGITAL UNIVERSE</p>
 
       <form id="proxy-form">
+        <label class="visually-hidden" for="url-input">Search or enter a website address</label>
         <input
           id="url-input"
           type="text"
@@ -1055,7 +1093,6 @@
         <div id="tab-list" role="tablist" aria-label="Browser tabs"></div>
         <p id="tab-search-status" role="status" hidden></p>
         <button type="button" id="new-tab" aria-label="New tab" title="New tab">+</button>
-        <button type="button" id="reopen-tab" aria-label="Reopen closed tab" title="Reopen closed tab" disabled>↶</button>
         <button type="button" id="close-other-tabs" aria-label="Close other unpinned tabs" title="Close other unpinned tabs" disabled>×</button>
         <button type="button" id="close-browser" aria-label="Close browser" title="Close browser">⌂</button>
       </div>
@@ -1078,11 +1115,14 @@
           id="current-address"
           type="text"
           placeholder="Search or enter address..."
+          aria-label="Current address"
         >
 
         <button type="button" id="navigate-button">Go</button>
+        <button type="button" id="copy-address" aria-label="Copy current address" title="Copy current address">Copy</button>
         <button type="button" id="fullscreen-button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button>
       </div>
+      <p class="browser-action-feedback" id="browser-action-feedback" role="status" aria-live="polite" hidden></p>
       <p class="bookmark-feedback" id="bookmark-feedback" role="status" aria-live="polite" hidden></p>
 
       <div class="browser-workspace">

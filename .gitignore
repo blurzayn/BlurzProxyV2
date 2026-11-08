@@ -5,3 +5,5 @@ node_modules/
 npm-debug.log*
 pnpm-debug.log*
 .DS_Store
+BlurzProxy/test-results/
+BlurzProxy/playwright-report/

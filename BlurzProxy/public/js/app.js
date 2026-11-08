@@ -40,12 +40,14 @@ const deleteSessionButton = document.getElementById("delete-session");
 const shortcutBindingList = document.getElementById("shortcut-binding-list");
 const closeBrowserButton = document.getElementById("close-browser");
 const bookmarkFeedback = document.getElementById("bookmark-feedback");
+const copyAddressButton = document.getElementById("copy-address");
+const browserActionFeedback = document.getElementById("browser-action-feedback");
 const settingsButton = document.getElementById("settings-button");
 const settingsPanel = document.getElementById("settings-panel");
+const restoreOpenTabsButton = document.getElementById("restore-open-tabs");
 const themeSelect = document.getElementById("theme-select");
 const accentColorPicker = document.getElementById("accent-color-picker");
 const searchEngineSelect = document.getElementById("search-engine-select");
-const startupPageSelect = document.getElementById("startup-page-select");
 const linkBehaviorSelect = document.getElementById("link-behavior-select");
 const reduceMotionSetting = document.getElementById("reduce-motion-setting");
 const popularSiteSettings = document.getElementById("popular-site-settings");
@@ -60,12 +62,13 @@ const settingsFileInput = document.getElementById("settings-file");
 const settingsMessage = document.getElementById("settings-message");
 const proxyStatus = document.getElementById("proxy-status");
 const proxyStatusText = document.getElementById("proxy-status-text");
+const proxyRetryButton = document.getElementById("proxy-retry");
+const proxyRecovery = document.getElementById("proxy-recovery");
 const proxyConnectionTestButton = document.getElementById("proxy-connection-test");
 const proxyConnectionResult = document.getElementById("proxy-connection-result");
 const sidebarToggle = document.getElementById("sidebar-toggle");
 const browserWorkspace = document.querySelector(".browser-workspace");
 const browserSidebar = document.getElementById("browser-sidebar");
-const reopenTabButton = document.getElementById("reopen-tab");
 const closeOtherTabsButton = document.getElementById("close-other-tabs");
 let siteButtons = Array.from(browserSidebar.querySelectorAll(".site-link"));
 const builtInSiteIds = siteButtons.map((button) => button.dataset.siteId);
@@ -78,12 +81,13 @@ let activeTabId = null;
 let nextTabId = 1;
 let engineError;
 let serverOnline = null;
+let serverError;
 let engineState = "starting";
+let retryingProxy = false;
 let reopeningTab = false;
 let checkingServer = false;
 let checkingProxyConnection = false;
 let bookmarkFeedbackTimeout;
-let lastVisitedUrl = "";
 let restoredOpenTabs = [];
 let siteOrder = [...siteIds];
 let hiddenSiteIds = new Set();
@@ -96,9 +100,8 @@ let shortcutBindings = {};
 let recordingShortcutAction = null;
 let restoringTabs = false;
 let customSiteCounter = 1;
-const themes = new Set(["purple", "blue", "red", "orange", "yellow", "green"]);
+const themes = new Set(["red", "orange", "yellow", "green", "blue", "purple"]);
 const searchEngines = new Set(["google", "bing", "duckduckgo"]);
-const startupPages = new Set(["home", "last", "restore"]);
 const linkBehaviors = new Set(["current", "new"]);
 const settingsStorageKeys = [
   "blurz-theme",
@@ -108,13 +111,13 @@ const settingsStorageKeys = [
   "blurz-saved-sessions",
   "blurz-shortcut-bindings",
   "blurz-search-engine",
-  "blurz-startup-page",
   "blurz-link-behavior",
   "blurz-reduce-motion",
   "blurz-clear-history-on-exit",
   "blurz-sidebar-collapsed",
   "blurz-popular-sites",
-  "blurz-custom-sites"
+  "blurz-custom-sites",
+  "blurz-open-tabs"
 ];
 const shortcutActions = [
   { id: "focusAddress", label: "Focus address bar", keys: "Ctrl+L" },
@@ -148,6 +151,17 @@ function saveSetting(key, value) {
   }
 }
 
+function safeReadJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null || raw === undefined || raw === "") return fallback;
+    const value = JSON.parse(raw);
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function setCustomAccent(color) {
   const root = document.documentElement;
   if (color) {
@@ -177,7 +191,8 @@ function saveOpenTabs() {
   const openUrls = tabs
     .map((tab) => ({
       url: tab.url,
-      pinned: tab.pinned
+      pinned: tab.pinned,
+      active: tab.id === activeTabId
     }))
     .filter((tab) => !tab.url || /^https?:\/\//i.test(tab.url));
   return saveSetting("blurz-open-tabs", JSON.stringify(openUrls));
@@ -434,10 +449,25 @@ function matchesShortcut(event, shortcut) {
     event.shiftKey === modifiers.has("Shift");
 }
 
+function normalizeSavedTabEntry(entry) {
+  if (!entry || typeof entry !== "object" || typeof entry.url !== "string") return null;
+
+  const rawUrl = entry.url.trim();
+  const normalizedUrl = rawUrl ? normalizeShortcutUrl(rawUrl) : "";
+  if (rawUrl && !normalizedUrl) return null;
+
+  return {
+    url: normalizedUrl,
+    pinned: entry.pinned === true,
+    active: entry.active === true
+  };
+}
+
 function currentTabSnapshot() {
   return tabs.map((tab) => ({
     url: tab.url,
-    pinned: tab.pinned
+    pinned: tab.pinned,
+    active: tab.id === activeTabId
   }));
 }
 
@@ -449,6 +479,16 @@ async function openTabSnapshot(snapshot) {
   await engineReady;
   if (!controller) throw engineError || new Error("The browser engine could not start.");
 
+  const entries = Array.isArray(snapshot) ? snapshot.map(normalizeSavedTabEntry).filter(Boolean) : [];
+  if (!entries.length) {
+    const emptyTab = createTab();
+    emptyTab.title = "New Tab";
+    activateTab(emptyTab.id);
+    saveOpenTabs();
+    renderTabs();
+    return;
+  }
+
   restoringTabs = true;
   tabs.forEach((tab) => {
     window.clearTimeout(tab.loadTimeout);
@@ -457,21 +497,27 @@ async function openTabSnapshot(snapshot) {
   });
   tabs = [];
   activeTabId = null;
+  let activeTab = null;
   try {
-    const entries = snapshot.length ? snapshot : [{ url: "", pinned: false }];
     for (const [index, entry] of entries.entries()) {
       const tab = createTab();
       tab.pinned = entry.pinned === true;
       if (entry.url) {
         const navigated = await navigate(entry.url, false);
-        if (!navigated) throw new Error(`Could not restore ${entry.url}.`);
+        if (!navigated) {
+          setTabLoadState(tab, "error", `Could not restore ${entry.url}.`);
+          continue;
+        }
       }
-      if (index === entries.length - 1) activateTab(tab.id);
+      if (entry.active || (!entries.some((candidate) => candidate.active) && index === entries.length - 1)) {
+        activeTab = tab;
+      }
     }
   } finally {
     restoringTabs = false;
   }
   tabs.sort((left, right) => Number(right.pinned) - Number(left.pinned));
+  if (activeTab && tabs.includes(activeTab)) activateTab(activeTab.id);
   saveOpenTabs();
   renderTabs();
 }
@@ -516,7 +562,7 @@ function runShortcutAction(actionId) {
     const activeTab = getActiveTab();
     if (activeTab) closeTab(activeTab.id);
   } else if (actionId === "reopenTab") {
-    reopenTabButton.click();
+    reopenClosedTab();
   } else if (actionId === "nextTab") {
     activateAdjacentTab(1);
   } else if (actionId === "previousTab") {
@@ -565,19 +611,17 @@ function syncSiteLists() {
   });
 }
 
-function updateReopenTabButton() {
-  reopenTabButton.disabled = closedTabs.length === 0 || reopeningTab;
-  reopenTabButton.title = closedTabs.length
-    ? `Reopen closed tab (${closedTabs.length})`
-    : "No closed tabs to reopen";
-}
-
 function updateTabActionButtons() {
-  updateReopenTabButton();
   const activeTab = getActiveTab();
   closeOtherTabsButton.disabled = !tabs.some((tab) =>
     tab.id !== activeTab?.id && !tab.pinned
   );
+}
+
+function showBrowserActionFeedback(text, isError = false) {
+  browserActionFeedback.textContent = text;
+  browserActionFeedback.dataset.state = isError ? "error" : "ready";
+  browserActionFeedback.hidden = !text;
 }
 
 function updateBookmarkButton() {
@@ -630,10 +674,18 @@ function updateProxyStatus() {
 
   proxyStatus.dataset.state = state;
   proxyStatusText.textContent = text;
+  const unavailable = state === "unavailable";
+  proxyRetryButton.hidden = !unavailable;
+  proxyRetryButton.disabled = retryingProxy;
+  proxyRetryButton.textContent = retryingProxy ? "Checking…" : "Retry";
+  proxyRecovery.hidden = !unavailable;
+  proxyRecovery.textContent = serverOnline === false
+    ? `Could not reach /api/status${serverError ? ` (${serverError})` : ""}. Check port 3000 and /tmp/blurzproxy.log in Codespaces.`
+    : "The proxy engine failed to start. Retry to restart it; if it still fails, reload the page and check /tmp/blurzproxy.log.";
 }
 
 async function checkProxyServer() {
-  if (checkingServer) return;
+  if (checkingServer) return serverOnline;
   checkingServer = true;
   try {
     const response = await fetch("/api/status", { cache: "no-store" });
@@ -642,10 +694,27 @@ async function checkProxyServer() {
     }
     const status = await response.json();
     serverOnline = status.status === "online";
-  } catch {
+    serverError = serverOnline ? "" : "unexpected status response";
+  } catch (error) {
     serverOnline = false;
+    serverError = error.message;
   } finally {
     checkingServer = false;
+    updateProxyStatus();
+  }
+  return serverOnline;
+}
+
+async function retryProxy() {
+  if (retryingProxy) return;
+  retryingProxy = true;
+  updateProxyStatus();
+  try {
+    if (await checkProxyServer()) {
+      window.location.reload();
+    }
+  } finally {
+    retryingProxy = false;
     updateProxyStatus();
   }
 }
@@ -798,7 +867,7 @@ function setReduceMotion(enabled) {
 }
 
 try {
-  const savedCustomSites = JSON.parse(localStorage.getItem("blurz-custom-sites") || "[]");
+  const savedCustomSites = safeReadJson("blurz-custom-sites", []);
   if (Array.isArray(savedCustomSites)) {
     customSites = savedCustomSites.filter((site) => {
       if (!site ||
@@ -828,7 +897,7 @@ try {
     setCustomAccent("");
   }
   try {
-    const savedBookmarks = JSON.parse(localStorage.getItem("blurz-bookmarks") || "[]");
+    const savedBookmarks = safeReadJson("blurz-bookmarks", []);
     if (Array.isArray(savedBookmarks)) {
       bookmarks = savedBookmarks
         .filter((item) => item && typeof item.name === "string" && typeof item.url === "string")
@@ -845,7 +914,7 @@ try {
     showSettingsMessage(`Could not load bookmarks: ${error.message}`);
   }
   try {
-    const savedFolders = JSON.parse(localStorage.getItem("blurz-bookmark-folders") || "[\"Unfiled\"]");
+    const savedFolders = safeReadJson("blurz-bookmark-folders", ["Unfiled"]);
     if (Array.isArray(savedFolders)) {
       bookmarkFolders = [
         "Unfiled",
@@ -862,7 +931,7 @@ try {
     showSettingsMessage(`Could not load bookmark folders: ${error.message}`);
   }
   try {
-    const savedHistory = JSON.parse(localStorage.getItem("blurz-recent-history") || "[]");
+    const savedHistory = safeReadJson("blurz-recent-history", []);
     if (Array.isArray(savedHistory)) {
       recentHistory = savedHistory
         .filter((item) => item && typeof item.name === "string" && typeof item.url === "string")
@@ -880,10 +949,6 @@ try {
   if (searchEngines.has(savedSearchEngine)) {
     searchEngineSelect.value = savedSearchEngine;
   }
-  const savedStartupPage = localStorage.getItem("blurz-startup-page");
-  if (startupPages.has(savedStartupPage)) {
-    startupPageSelect.value = savedStartupPage;
-  }
   const savedLinkBehavior = localStorage.getItem("blurz-link-behavior");
   if (linkBehaviors.has(savedLinkBehavior)) {
     linkBehaviorSelect.value = savedLinkBehavior;
@@ -892,15 +957,8 @@ try {
   clearHistoryOnExitSetting.checked =
     localStorage.getItem("blurz-clear-history-on-exit") === "true";
   setSidebarCollapsed(localStorage.getItem("blurz-sidebar-collapsed") === "true");
-  const savedLastVisitedUrl = localStorage.getItem("blurz-last-visited-url");
-  if (savedLastVisitedUrl) {
-    const url = new URL(savedLastVisitedUrl);
-    if (["http:", "https:"].includes(url.protocol)) {
-      lastVisitedUrl = url.href;
-    }
-  }
   try {
-    const savedOpenTabs = JSON.parse(localStorage.getItem("blurz-open-tabs") || "[]");
+    const savedOpenTabs = safeReadJson("blurz-open-tabs", []);
     if (Array.isArray(savedOpenTabs)) {
       restoredOpenTabs = savedOpenTabs
         .map((entry) => {
@@ -908,14 +966,7 @@ try {
             const url = normalizeShortcutUrl(entry);
             return url ? { url, pinned: false } : null;
           }
-          if (!entry || typeof entry !== "object") return null;
-          const url = entry.url === "" ? "" :
-            typeof entry.url === "string" ? normalizeShortcutUrl(entry.url) : null;
-          if (url === null) return null;
-          return {
-            url,
-            pinned: entry.pinned === true
-          };
+          return normalizeSavedTabEntry(entry);
         })
         .filter(Boolean)
         .slice(0, 50);
@@ -924,26 +975,22 @@ try {
     showSettingsMessage(`Could not load the saved tab session: ${error.message}`);
   }
   try {
-    const storedSessions = JSON.parse(localStorage.getItem("blurz-saved-sessions") || "[]");
+    const storedSessions = safeReadJson("blurz-saved-sessions", []);
     if (Array.isArray(storedSessions)) {
       savedSessions = storedSessions
         .filter((session) => session && typeof session.name === "string" && Array.isArray(session.tabs))
         .map((session) => ({
           name: session.name.trim().slice(0, 40),
-          tabs: session.tabs.map((entry) => {
-            if (typeof entry === "string") {
-              const url = normalizeShortcutUrl(entry);
-              return url ? { url, pinned: false } : null;
-            }
-            if (!entry || typeof entry !== "object") return null;
-            const url = entry.url === "" ? "" :
-              typeof entry.url === "string" ? normalizeShortcutUrl(entry.url) : null;
-            if (url === null) return null;
-            return {
-              url,
-              pinned: entry.pinned === true
-            };
-          }).filter(Boolean).slice(0, 50)
+          tabs: session.tabs
+            .map((entry) => {
+              if (typeof entry === "string") {
+                const url = normalizeShortcutUrl(entry);
+                return url ? { url, pinned: false } : null;
+              }
+              return normalizeSavedTabEntry(entry);
+            })
+            .filter(Boolean)
+            .slice(0, 50)
         }))
         .filter((session) => session.name)
         .slice(0, 20);
@@ -951,6 +998,7 @@ try {
   } catch (error) {
     showSettingsMessage(`Could not load saved sessions: ${error.message}`);
   }
+  restoreOpenTabsButton.disabled = restoredOpenTabs.length === 0;
   try {
     const savedBindings = JSON.parse(localStorage.getItem("blurz-shortcut-bindings") || "{}");
     if (savedBindings && typeof savedBindings === "object" && !Array.isArray(savedBindings)) {
@@ -994,6 +1042,7 @@ checkProxyServer();
 window.setInterval(checkProxyServer, 15000);
 
 proxyConnectionTestButton.addEventListener("click", testProxyConnection);
+proxyRetryButton.addEventListener("click", retryProxy);
 
 bookmarkButton.addEventListener("click", () => {
   const tab = getActiveTab();
@@ -1095,6 +1144,20 @@ loadSessionButton.addEventListener("click", async () => {
   }
 });
 
+restoreOpenTabsButton.addEventListener("click", async () => {
+  if (!restoredOpenTabs.length) return;
+  try {
+    await openTabSnapshot(restoredOpenTabs);
+    browser.hidden = false;
+    home.hidden = true;
+    settingsPanel.hidden = true;
+    settingsButton.setAttribute("aria-expanded", "false");
+    showSettingsMessage("");
+  } catch (error) {
+    showSettingsMessage(`Could not restore previous tabs: ${error.message}`);
+  }
+});
+
 deleteSessionButton.addEventListener("click", () => {
   const index = Number(savedSessionSelect.value);
   if (!savedSessions[index]) return;
@@ -1117,7 +1180,20 @@ clearHistoryOnExitSetting.addEventListener("change", () => {
   }
 });
 
+window.addEventListener("beforeunload", () => {
+  try {
+    saveOpenTabs();
+  } catch (error) {
+    console.error("Could not save open tabs before exit:", error);
+  }
+});
+
 window.addEventListener("pagehide", () => {
+  try {
+    saveOpenTabs();
+  } catch (error) {
+    console.error("Could not save open tabs before page hide:", error);
+  }
   if (clearHistoryOnExitSetting.checked) {
     try {
       localStorage.removeItem("blurz-recent-history");
@@ -1166,6 +1242,9 @@ settingsButton.addEventListener("click", () => {
   const expanded = settingsButton.getAttribute("aria-expanded") === "true";
   settingsButton.setAttribute("aria-expanded", String(!expanded));
   settingsPanel.hidden = expanded;
+  if (!expanded) {
+    settingsPanel.querySelector("select, input:not([type='hidden']), button")?.focus();
+  }
 });
 
 themeSelect.addEventListener("change", () => {
@@ -1286,14 +1365,6 @@ settingsFileInput.addEventListener("change", async () => {
 searchEngineSelect.addEventListener("change", () => {
   if (searchEngines.has(searchEngineSelect.value) &&
       saveSetting("blurz-search-engine", searchEngineSelect.value)) {
-    showSettingsMessage("");
-  }
-});
-
-startupPageSelect.addEventListener("change", () => {
-  if (startupPages.has(startupPageSelect.value) &&
-      saveSetting("blurz-startup-page", startupPageSelect.value)) {
-    if (!saveOpenTabs()) return;
     showSettingsMessage("");
   }
 });
@@ -1556,12 +1627,39 @@ function validateImportedSettings(payload) {
         if (url === null) throw new Error("A saved session contains an invalid website address.");
         return {
           url,
-          pinned: entry.pinned === true
+          pinned: entry.pinned === true,
+          active: entry.active === true
         };
       });
       return {
         name: session.name.trim().slice(0, 40),
         tabs: tabsToRestore
+      };
+    });
+  }
+  if ("blurz-open-tabs" in values) {
+    const value = parseValue("blurz-open-tabs");
+    if (!Array.isArray(value) || value.length > 50) {
+      throw new Error("The imported tab session must contain 50 or fewer entries.");
+    }
+    imported["blurz-open-tabs"] = value.map((entry) => {
+      if (typeof entry === "string") {
+        const url = normalizeShortcutUrl(entry);
+        if (!url) throw new Error("The imported tab list contains an invalid website address.");
+        return { url, pinned: false, active: false };
+      }
+      if (!entry || typeof entry !== "object") {
+        throw new Error("The imported tab list contains an invalid entry.");
+      }
+      const url = entry.url === "" ? "" :
+        typeof entry.url === "string" ? normalizeShortcutUrl(entry.url) : null;
+      if (url === null) {
+        throw new Error("The imported tab list contains an invalid website address.");
+      }
+      return {
+        url,
+        pinned: entry.pinned === true,
+        active: entry.active === true
       };
     });
   }
@@ -1588,7 +1686,6 @@ function validateImportedSettings(payload) {
     imported["blurz-shortcut-bindings"] = validBindings;
   }
   if ("blurz-search-engine" in values) validateChoice("blurz-search-engine", searchEngines);
-  if ("blurz-startup-page" in values) validateChoice("blurz-startup-page", startupPages);
   if ("blurz-link-behavior" in values) validateChoice("blurz-link-behavior", linkBehaviors);
 
   for (const key of [
@@ -1644,13 +1741,6 @@ function validateImportedSettings(payload) {
         typeof id === "string" && validSiteIds.has(id)
       ))]
     };
-  }
-
-  if ("blurz-last-visited-url" in values) {
-    const value = parseValue("blurz-last-visited-url");
-    const url = typeof value === "string" ? normalizeShortcutUrl(value) : null;
-    if (!url) throw new Error("The saved startup URL is invalid.");
-    imported["blurz-last-visited-url"] = url;
   }
 
   return Object.fromEntries(Object.entries(imported).map(([key, value]) => [
@@ -1756,6 +1846,7 @@ function activateTab(id) {
   browser.hidden = false;
   home.hidden = true;
   renderTabs();
+  saveOpenTabs();
 }
 
 function activateAdjacentTab(offset) {
@@ -1765,7 +1856,7 @@ function activateAdjacentTab(offset) {
   activateTab(tabs[nextIndex].id);
 }
 
-function createTab() {
+function createTab({ activate = true, persist = true } = {}) {
   const id = nextTabId++;
   const container = document.createElement("div");
   container.className = "browser-frame";
@@ -1820,9 +1911,6 @@ function createTab() {
 
   tab.frame.addEventListener("urlchange", (event) => {
     tab.url = event.url;
-    if (/^https?:\/\//i.test(tab.url)) {
-      saveSetting("blurz-last-visited-url", tab.url);
-    }
     saveOpenTabs();
     try {
       tab.title = new URL(event.url).hostname || "New Tab";
@@ -1841,11 +1929,16 @@ function createTab() {
   });
 
   tabs.push(tab);
-  activateTab(id);
-  address.value = "";
-  address.focus();
+  if (activate) {
+    activateTab(id);
+    address.value = "";
+    address.focus();
+  } else {
+    if (!getActiveTab()) activeTabId = id;
+    renderTabs();
+  }
   updateBookmarkButton();
-  saveOpenTabs();
+  if (persist) saveOpenTabs();
   return tab;
 }
 
@@ -1857,7 +1950,6 @@ function closeTab(id, remember = true) {
   if (remember) {
     closedTabs.push({ url: closedTab.url });
     if (closedTabs.length > 20) closedTabs.shift();
-    updateReopenTabButton();
   }
 
   const [tab] = tabs.splice(index, 1);
@@ -1927,7 +2019,7 @@ async function initializeEngine() {
 
   engineState = "ready";
   updateProxyStatus();
-  createTab();
+  createTab({ activate: false, persist: false });
   browser.hidden = true;
   home.hidden = false;
   setEngineStatus("Browser engine ready", "Enter a website or search term to get started.");
@@ -1940,17 +2032,6 @@ const engineReady = initializeEngine().catch((error) => {
   updateProxyStatus();
   setEngineStatus("Browser engine unavailable", error.message);
   return null;
-});
-
-engineReady.then((readyController) => {
-  if (!readyController) return;
-  if (restoredOpenTabs.length) {
-    openTabSnapshot(restoredOpenTabs).catch((error) => {
-      setEngineStatus("Could not restore tabs", error.message);
-    });
-  } else if (startupPageSelect.value === "last" && lastVisitedUrl) {
-    navigate(lastVisitedUrl, false);
-  }
 });
 
 // Convert input into a valid HTTP or HTTPS URL
@@ -2032,12 +2113,27 @@ async function navigate(value, openInNewTab = linkBehaviorSelect.value === "new"
   }
 }
 
-reopenTabButton.addEventListener("click", async () => {
+async function copyCurrentAddress() {
+  const tab = getActiveTab();
+  const url = tab?.url || address.value.trim();
+  if (!url) {
+    showBrowserActionFeedback("There is no address to copy.", true);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(url);
+    showBrowserActionFeedback("Address copied.");
+  } catch (error) {
+    showBrowserActionFeedback(`Could not copy address: ${error.message}`, true);
+  }
+}
+
+async function reopenClosedTab() {
   const closedTab = closedTabs[closedTabs.length - 1];
   if (!closedTab || reopeningTab) return;
 
   reopeningTab = true;
-  updateReopenTabButton();
   try {
     await engineReady;
     if (!controller) {
@@ -2047,7 +2143,6 @@ reopenTabButton.addEventListener("click", async () => {
     const tab = createTab();
     if (!closedTab.url || await navigate(closedTab.url, false)) {
       closedTabs.pop();
-      updateReopenTabButton();
     } else {
       closeTab(tab.id, false);
     }
@@ -2055,9 +2150,8 @@ reopenTabButton.addEventListener("click", async () => {
     setEngineStatus("Could not reopen tab", error.message);
   } finally {
     reopeningTab = false;
-    updateReopenTabButton();
   }
-});
+}
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -2086,6 +2180,7 @@ newTabButton.addEventListener("click", async () => {
   }
 });
 
+copyAddressButton.addEventListener("click", copyCurrentAddress);
 closeOtherTabsButton.addEventListener("click", closeOtherTabs);
 
 closeBrowserButton.addEventListener("click", () => {

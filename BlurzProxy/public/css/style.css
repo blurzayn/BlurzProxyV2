@@ -200,7 +200,19 @@ button:hover {
   padding: 10px 18px;
 }
 
+.browser-action-feedback {
+  padding: 6px 12px;
+  color: var(--accent-muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.browser-action-feedback[data-state="error"] {
+  color: #fca5a5;
+}
+
 #current-address {
+  min-width: 0;
   color: #b9bde0;
   font-size: 13px;
   overflow: hidden;
