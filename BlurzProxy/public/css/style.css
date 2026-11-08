@@ -5,15 +5,25 @@
   padding: 0;
 }
 
+:root {
+  --space-glow-one: rgba(39, 54, 125, 0.25);
+  --space-glow-two: rgba(83, 35, 145, 0.22);
+  --space-glow-three: rgba(0, 104, 180, 0.18);
+  --space-base: #03040c;
+  --space-mid: #080b1b;
+  --accent: #a855f7;
+  --accent-strong: #9333ea;
+}
+
 body {
   min-height: 100vh;
   color: #fff;
   font-family: 'Inter', sans-serif;
   background:
-    radial-gradient(ellipse at 50% 45%, rgba(39, 54, 125, 0.25), transparent 55%),
-    radial-gradient(ellipse at 15% 20%, rgba(83, 35, 145, 0.22), transparent 40%),
-    radial-gradient(ellipse at 85% 75%, rgba(0, 104, 180, 0.18), transparent 40%),
-    linear-gradient(135deg, #03040c, #080b1b 55%, #02040b);
+    radial-gradient(ellipse at 50% 45%, var(--space-glow-one), transparent 55%),
+    radial-gradient(ellipse at 15% 20%, var(--space-glow-two), transparent 40%),
+    radial-gradient(ellipse at 85% 75%, var(--space-glow-three), transparent 40%),
+    linear-gradient(135deg, var(--space-base), var(--space-mid) 55%, #02040b);
   background-attachment: fixed;
   overflow-x: hidden;
   position: relative;
@@ -28,9 +38,9 @@ body::before {
   background-image:
     radial-gradient(2px 2px at 20px 30px, white, transparent),
     radial-gradient(1px 1px at 90px 80px, white, transparent),
-    radial-gradient(2px 2px at 160px 140px, #a9c8ff, transparent),
+    radial-gradient(2px 2px at 160px 140px, var(--accent), transparent),
     radial-gradient(1px 1px at 240px 40px, white, transparent),
-    radial-gradient(2px 2px at 300px 180px, #b9a5ff, transparent);
+    radial-gradient(2px 2px at 300px 180px, var(--accent), transparent);
   background-size: 350px 250px;
   opacity: 0.65;
 }
@@ -51,7 +61,7 @@ header h2 {
   font-weight: 800;
   letter-spacing: 5px;
   color: white;
-  text-shadow: 0 0 18px #7770ff;
+  text-shadow: 0 0 18px var(--accent);
 }
 
 /* Main layout */
@@ -84,14 +94,14 @@ main {
   background: linear-gradient(
     110deg,
     #ffffff,
-    #b7c8ff,
-    #8e78ff,
+    var(--accent),
+    var(--accent-strong),
     #ffffff
   );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 22px rgba(110, 110, 255, 0.65));
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--accent) 65%, transparent));
 }
 
 .home p {
@@ -109,11 +119,11 @@ form {
   margin-top: 42px;
   padding: 9px;
   background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(153, 160, 255, 0.28);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
   border-radius: 16px;
   backdrop-filter: blur(18px);
   box-shadow:
-    0 0 35px rgba(74, 74, 200, 0.12),
+    0 0 35px color-mix(in srgb, var(--accent-strong) 12%, transparent),
     inset 0 0 20px rgba(255, 255, 255, 0.025);
 }
 
@@ -137,19 +147,19 @@ button {
   padding: 0 30px;
   border: none;
   border-radius: 11px;
-  background: linear-gradient(135deg, #7865ff, #4d65e9);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: white;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 0 22px rgba(105, 100, 255, 0.35);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 35%, transparent);
   transition: 0.25s ease;
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 32px rgba(105, 100, 255, 0.65);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--accent) 65%, transparent);
 }
 
 #message {
@@ -167,9 +177,9 @@ button:hover {
   flex-direction: column;
   overflow: hidden;
   background: rgba(9, 12, 30, 0.88);
-  border: 1px solid rgba(153, 160, 255, 0.3);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 16px;
-  box-shadow: 0 0 35px rgba(74, 74, 200, 0.2);
+  box-shadow: 0 0 35px color-mix(in srgb, var(--accent-strong) 20%, transparent);
 }
 
 .browser[hidden] {
@@ -183,7 +193,7 @@ button:hover {
   align-items: center;
   gap: 15px;
   background: rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(153, 160, 255, 0.2);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .browser-toolbar button {
@@ -211,8 +221,17 @@ button:hover {
   align-items: center;
   gap: 9px;
   padding: 12px 18px;
-  color: #c4b5fd;
+  color: var(--accent);
   font-size: 13px;
+}
+
+.home-engine-status {
+  justify-content: center;
+  text-align: center;
+}
+
+.home-engine-status .engine-description {
+  margin: 0;
 }
 
 .status-dot {
@@ -231,8 +250,8 @@ button:hover {
 .browser-welcome h2 {
   font-family: 'Orbitron', sans-serif;
   font-size: 48px;
-  color: #a855f7;
-  text-shadow: 0 0 20px #9333ea;
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-strong);
 }
 
 .browser-welcome p {

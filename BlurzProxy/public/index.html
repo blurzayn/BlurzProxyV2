@@ -15,25 +15,416 @@
   <link rel="stylesheet" href="/css/style.css">
 
   <style>
+    :root {
+      --surface: #10101d;
+      --surface-raised: #171526;
+      --surface-soft: #201b31;
+      --border: #302344;
+      --space-glow-one: rgba(39, 54, 125, 0.25);
+      --space-glow-two: rgba(83, 35, 145, 0.22);
+      --space-glow-three: rgba(0, 104, 180, 0.18);
+      --space-base: #03040c;
+      --space-mid: #080b1b;
+      --accent: #a855f7;
+      --accent-strong: #9333ea;
+      --accent-light: #c4b5fd;
+      --accent-muted: #b7aecb;
+      --scrollbar: #6b4d91;
+    }
+
+    :root[data-theme="blue"] {
+      --space-glow-one: rgba(14, 116, 190, 0.3);
+      --space-glow-two: rgba(8, 145, 178, 0.22);
+      --space-glow-three: rgba(30, 64, 175, 0.24);
+      --space-base: #020812;
+      --space-mid: #06172a;
+      --accent: #38bdf8;
+      --accent-strong: #0284c7;
+      --accent-light: #bae6fd;
+      --accent-muted: #a8c9d8;
+      --scrollbar: #28799c;
+    }
+
+    :root[data-theme="red"] {
+      --space-glow-one: rgba(190, 24, 93, 0.28);
+      --space-glow-two: rgba(153, 27, 27, 0.24);
+      --space-glow-three: rgba(194, 65, 12, 0.2);
+      --space-base: #0c0308;
+      --space-mid: #1b0711;
+      --accent: #fb7185;
+      --accent-strong: #e11d48;
+      --accent-light: #fecdd3;
+      --accent-muted: #d7aab1;
+      --scrollbar: #a43e55;
+    }
+
+    :root[data-theme="orange"] {
+      --space-glow-one: rgba(194, 65, 12, 0.3);
+      --space-glow-two: rgba(180, 83, 9, 0.24);
+      --space-glow-three: rgba(153, 27, 27, 0.2);
+      --space-base: #0c0602;
+      --space-mid: #1b1006;
+      --accent: #fb923c;
+      --accent-strong: #ea580c;
+      --accent-light: #fed7aa;
+      --accent-muted: #d7b99d;
+      --scrollbar: #a85e28;
+    }
+
+    :root[data-theme="yellow"] {
+      --space-glow-one: rgba(202, 138, 4, 0.28);
+      --space-glow-two: rgba(161, 98, 7, 0.22);
+      --space-glow-three: rgba(180, 83, 9, 0.18);
+      --space-base: #0c0a02;
+      --space-mid: #1b1606;
+      --accent: #facc15;
+      --accent-strong: #ca8a04;
+      --accent-light: #fef08a;
+      --accent-muted: #d7ce9d;
+      --scrollbar: #a88928;
+    }
+
+    :root[data-theme="green"] {
+      --space-glow-one: rgba(5, 150, 105, 0.28);
+      --space-glow-two: rgba(22, 101, 52, 0.22);
+      --space-glow-three: rgba(13, 148, 136, 0.18);
+      --space-base: #020c08;
+      --space-mid: #061b12;
+      --accent: #4ade80;
+      --accent-strong: #16a34a;
+      --accent-light: #bbf7d0;
+      --accent-muted: #a8d8b8;
+      --scrollbar: #288c50;
+    }
+
+    :root[data-custom-accent="true"] {
+      --accent-strong: color-mix(in srgb, var(--accent) 78%, black);
+      --accent-light: color-mix(in srgb, var(--accent) 55%, white);
+      --accent-muted: color-mix(in srgb, var(--accent) 65%, white);
+      --scrollbar: var(--accent);
+    }
+
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      background: #080812;
       color: white;
       font-family: Inter, sans-serif;
     }
 
     header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 16px 25px;
-      border-bottom: 1px solid #28213d;
+      border-bottom: 1px solid var(--border);
     }
 
     header h2 {
       font-family: Orbitron, sans-serif;
-      color: #a855f7;
+      color: var(--accent);
+    }
+
+    .settings {
+      position: relative;
+    }
+
+    .settings-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 3;
+      width: min(370px, calc(100vw - 32px));
+      max-height: min(80vh, 640px);
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface-raised);
+      box-shadow: 0 8px 24px #0008;
+      overflow-y: auto;
+    }
+
+    .settings-panel label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent-light);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .settings-panel select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface);
+      color: white;
+      font: inherit;
+    }
+
+    .settings-panel input[type="color"] {
+      width: 48px;
+      height: 36px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .settings-panel input[type="text"] {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface);
+      color: white;
+      font: inherit;
+    }
+
+    .settings-panel .accent-color-label {
+      margin-top: 12px;
+    }
+
+    .settings-section {
+      margin: 0 0 16px;
+      padding: 0 0 14px;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-section:last-of-type {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .settings-section legend {
+      margin-bottom: 10px;
+      color: var(--accent-light);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .settings-section .setting-description {
+      margin-top: 6px;
+      color: var(--accent-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .setting-check {
+      display: flex !important;
+      align-items: center;
+      gap: 9px;
+      margin: 0 !important;
+      font-size: 12px !important;
+      font-weight: 400 !important;
+    }
+
+    .setting-check input {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--accent-strong);
+    }
+
+    #popular-site-settings {
+      display: grid;
+      gap: 6px;
+    }
+
+    #bookmark-list,
+    #recent-history-list {
+      display: grid;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .bookmark-entry {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(70px, auto) auto;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bookmark-tools,
+    .session-tools {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .shortcut-binding-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .shortcut-binding {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--accent-muted);
+      font-size: 11px;
+    }
+
+    .shortcut-binding button {
+      min-height: 30px;
+      padding: 0 8px;
+      font-size: 11px;
+    }
+
+    #bookmark-folder-select,
+    #bookmark-folder-filter,
+    #saved-session-select,
+    .bookmark-folder-assignment {
+      width: 100%;
+      min-width: 0;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface);
+      color: white;
+      font: inherit;
+    }
+
+    .bookmark-folder-assignment {
+      padding: 5px;
+      font-size: 10px;
+    }
+
+    .bookmark-entry .site-link,
+    #recent-history-list .site-link {
+      min-width: 0;
+      margin: 0;
+    }
+
+    .bookmark-entry .remove-bookmark {
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0 8px;
+      background: #7f1d1d;
+    }
+
+    .list-empty {
+      color: var(--accent-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .popular-site-setting {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .popular-site-setting .setting-check {
+      min-width: 0;
+    }
+
+    .site-order-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .custom-shortcut-form {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      margin: 0 0 12px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .custom-shortcut-form input {
+      width: 100%;
+      padding: 9px;
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .custom-shortcut-form button {
+      padding: 9px;
+    }
+
+    .site-order-controls .remove-shortcut {
+      background: #7f1d1d;
+    }
+
+    .site-order-controls button {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .settings-action {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .settings-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .settings-row .settings-action {
+      flex: 1;
+    }
+
+    .settings-file-input {
+      display: none !important;
+    }
+
+    .keyboard-shortcuts {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 12px;
+      color: var(--accent-muted);
+      font-size: 11px;
+    }
+
+    .keyboard-shortcuts kbd {
+      color: var(--accent-light);
+      font: inherit;
+      font-weight: 600;
+    }
+
+    .settings-message {
+      margin-top: 10px;
+      color: var(--accent-muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--accent-light);
+      outline-offset: 2px;
+    }
+
+    :root[data-reduce-motion="true"] *,
+    :root[data-reduce-motion="true"] *::before,
+    :root[data-reduce-motion="true"] *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
 
     .home {
@@ -41,9 +432,39 @@
       padding: 90px 20px;
     }
 
+    .proxy-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: auto;
+      margin-right: 18px;
+      color: var(--accent-muted);
+      font-size: 12px;
+    }
+
+    .proxy-status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #facc15;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .proxy-status[data-state="ready"] .proxy-status-dot {
+      background: #4ade80;
+    }
+
+    .proxy-status[data-state="unavailable"] .proxy-status-dot {
+      background: #fb7185;
+    }
+
+    .proxy-status[data-state="unavailable"] {
+      color: #fecdd3;
+    }
+
     .home h1 {
       font: 900 65px Orbitron, sans-serif;
-      color: #a855f7;
+      color: var(--accent);
     }
 
     #proxy-form {
@@ -54,8 +475,8 @@
     }
 
     input {
-      background: #171526;
-      border: 1px solid #49316b;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
       color: white;
       padding: 14px;
       border-radius: 9px;
@@ -67,25 +488,35 @@
     }
 
     button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
       cursor: pointer;
       border: 0;
       border-radius: 8px;
-      padding: 12px 17px;
-      background: #9333ea;
+      background: var(--accent-strong);
       color: white;
-      font-weight: 600;
+      font: 600 14px/1.2 Inter, sans-serif;
+      white-space: nowrap;
     }
 
     button:hover {
-      background: #a855f7;
+      background: var(--accent);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
     }
 
     .browser {
       margin: 20px;
-      border: 1px solid #302344;
+      border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      background: #10101d;
+      background: var(--surface);
       min-height: 75vh;
       width: min(1400px, calc(100% - 40px));
       height: calc(100vh - 110px);
@@ -96,10 +527,20 @@
     .tabs {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
       min-width: 0;
       padding: 10px;
-      background: #171526;
-      border-bottom: 1px solid #302344;
+      background: var(--surface-raised);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #tab-search {
+      flex: 0 1 160px;
+      width: 120px;
+      min-height: 38px;
+      padding: 8px 10px;
+      font-size: 12px;
     }
 
     #tab-list {
@@ -112,30 +553,53 @@
       scrollbar-width: thin;
     }
 
+    #tab-search-status {
+      flex: 0 0 auto;
+      color: var(--accent-muted);
+      font-size: 11px;
+    }
+
     .tab-item {
       display: flex;
       align-items: center;
       flex: 0 0 auto;
       border-radius: 8px;
-      background: #292039;
+      background: var(--surface-soft);
     }
 
     .tab-item.active {
-      background: #49316b;
+      background: var(--accent-strong);
+    }
+
+    .tab-item.pinned .tab::before {
+      content: "📌 ";
     }
 
     .tab {
       background: transparent;
-      padding: 10px 12px;
+      min-height: 40px;
+      padding: 0 12px;
       border-radius: 8px;
       font-size: 13px;
       white-space: nowrap;
     }
 
     .tab-close {
-      padding: 6px 9px;
+      width: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0;
       background: transparent;
       box-shadow: none;
+    }
+
+    .tab-pin {
+      min-width: 30px;
+      min-height: 30px;
+      padding: 0 6px;
+      background: transparent;
+      box-shadow: none;
+      font-size: 12px;
     }
 
     .toolbar {
@@ -143,12 +607,18 @@
       align-items: center;
       gap: 8px;
       padding: 12px;
-      background: #11101c;
+      background: var(--surface);
       flex: 0 0 auto;
     }
 
     .toolbar input {
       flex: 1;
+    }
+
+    .site-order-controls button {
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0 8px;
       min-width: 0;
     }
 
@@ -164,6 +634,10 @@
       min-height: 0;
     }
 
+    .browser-workspace.sidebar-collapsed {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
     #browser-content {
       display: flex;
       flex-direction: column;
@@ -176,7 +650,7 @@
       text-align: center;
       color: #aaa;
       scrollbar-width: thin;
-      scrollbar-color: #6b4d91 #171526;
+      scrollbar-color: var(--scrollbar) var(--surface-raised);
     }
 
     #frame-host {
@@ -185,7 +659,7 @@
       min-height: 0;
       overflow: auto;
       scrollbar-width: thin;
-      scrollbar-color: #6b4d91 #171526;
+      scrollbar-color: var(--scrollbar) var(--surface-raised);
     }
 
     .browser-frame {
@@ -206,17 +680,44 @@
       background: white;
     }
 
+    .tab-load-status {
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 6px 12px;
+      color: var(--accent-muted);
+      background: var(--surface-raised);
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .tab-load-status[data-state="error"] {
+      color: #fecdd3;
+    }
+
+    .bookmark-feedback {
+      margin: 0;
+      padding: 7px 12px;
+      color: var(--accent-muted);
+      background: var(--surface-raised);
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .bookmark-feedback[data-state="error"] {
+      color: #fecdd3;
+    }
+
     #browser-sidebar {
       overflow-y: auto;
       padding: 16px 12px;
-      background: #12111f;
-      border-left: 1px solid #302344;
+      background: var(--surface-raised);
+      border-left: 1px solid var(--border);
       text-align: left;
     }
 
     #browser-sidebar h3 {
       margin: 0 0 12px;
-      color: #c4b5fd;
+      color: var(--accent-light);
       font: 600 13px Inter, sans-serif;
     }
 
@@ -226,14 +727,14 @@
       margin: 6px 0;
       padding: 10px;
       text-align: left;
-      background: #201b31;
+      background: var(--surface-soft);
       box-shadow: none;
     }
 
     .site-link span {
       display: block;
       margin-top: 3px;
-      color: #b7aecb;
+      color: var(--accent-muted);
       font-size: 11px;
       font-weight: 400;
     }
@@ -248,7 +749,7 @@
     }
 
     #browser-content h2 {
-      color: #a855f7;
+      color: var(--accent);
       font-family: Orbitron, sans-serif;
     }
 
@@ -261,9 +762,53 @@
         flex-wrap: wrap;
       }
 
+      header {
+        padding: 12px;
+      }
+
+      .proxy-status {
+        margin-right: 8px;
+        font-size: 10px;
+      }
+
       .toolbar input {
         flex-basis: 100%;
         order: 2;
+      }
+
+      .browser-toolbar {
+        gap: 6px;
+        align-items: stretch;
+      }
+
+      .browser-toolbar > button:not(#navigate-button):not(#fullscreen-button) {
+        order: 1;
+        flex: 1 1 44px;
+        min-width: 0;
+        min-height: 42px;
+        padding: 0 8px;
+      }
+
+      .browser-toolbar #current-address {
+        order: 2;
+        flex: 1 1 calc(100% - 108px);
+        width: auto;
+        min-height: 42px;
+        padding: 10px;
+      }
+
+      .browser-toolbar #navigate-button {
+        order: 3;
+        flex: 0 0 56px;
+        min-height: 42px;
+        padding: 0 10px;
+      }
+
+      .browser-toolbar #fullscreen-button {
+        order: 4;
+        flex: 0 0 46px;
+        min-height: 42px;
+        padding: 0 10px;
       }
 
       .browser {
@@ -271,6 +816,26 @@
         height: calc(100vh - 100px);
         min-height: 400px;
         margin: 10px;
+      }
+
+      .tabs {
+        flex-wrap: wrap;
+        padding: 8px;
+      }
+
+      #tab-search {
+        order: -1;
+        flex: 1 1 100%;
+        width: 100%;
+      }
+
+      #tab-list {
+        flex: 1 1 100%;
+        order: 0;
+      }
+
+      #tab-search-status {
+        order: 1;
       }
 
       .browser-workspace {
@@ -285,7 +850,7 @@
         overflow-x: auto;
         overflow-y: hidden;
         padding: 8px;
-        border-top: 1px solid #302344;
+        border-top: 1px solid var(--border);
         border-left: 0;
       }
 
@@ -314,6 +879,152 @@
 <body>
   <header>
     <h2>BLURZ</h2>
+    <div class="proxy-status" id="proxy-status" data-state="checking" role="status" aria-live="polite">
+      <span class="proxy-status-dot"></span>
+      <span id="proxy-status-text">Checking proxy…</span>
+    </div>
+    <div class="settings">
+      <button
+        type="button"
+        id="settings-button"
+        aria-expanded="false"
+        aria-controls="settings-panel"
+      >Settings</button>
+      <div class="settings-panel" id="settings-panel" hidden>
+        <fieldset class="settings-section">
+          <label for="theme-select">Space theme</label>
+          <select id="theme-select">
+            <option value="purple">Purple space</option>
+            <option value="blue">Blue space</option>
+            <option value="red">Red space</option>
+            <option value="orange">Orange space</option>
+            <option value="yellow">Yellow space</option>
+            <option value="green">Green space</option>
+          </select>
+          <label class="accent-color-label" for="accent-color-picker">Custom accent color</label>
+          <input type="color" id="accent-color-picker" value="#a855f7" aria-describedby="accent-color-description">
+          <p class="setting-description" id="accent-color-description">Pick any accent color. Selecting a space theme resets the custom accent.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <label for="search-engine-select">Default search engine</label>
+          <select id="search-engine-select">
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="duckduckgo">DuckDuckGo</option>
+          </select>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <label for="startup-page-select">Startup page</label>
+          <select id="startup-page-select">
+            <option value="home">Home</option>
+            <option value="last">Last visited site</option>
+            <option value="restore">Restore open tabs</option>
+          </select>
+          <p class="setting-description">Open tabs are automatically recovered after a refresh or unexpected close. This setting controls the startup page when there are no tabs to recover.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Proxy connection</legend>
+          <button type="button" class="settings-action" id="proxy-connection-test">Test connection</button>
+          <p class="settings-message" id="proxy-connection-result" role="status" aria-live="polite" hidden></p>
+          <p class="setting-description">Checks whether this app can establish a WebSocket connection to its proxy transport.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <label for="link-behavior-select">Open websites in</label>
+          <select id="link-behavior-select">
+            <option value="current">Current tab</option>
+            <option value="new">New proxy tab</option>
+          </select>
+          <p class="setting-description">Applies to the address bar and popular-site shortcuts.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Appearance</legend>
+          <label class="setting-check" for="reduce-motion-setting">
+            <input type="checkbox" id="reduce-motion-setting">
+            Reduce animations
+          </label>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Popular sites</legend>
+          <form id="custom-shortcut-form" class="custom-shortcut-form">
+            <input id="shortcut-name" type="text" maxlength="40" placeholder="Shortcut name" aria-label="Shortcut name" required>
+            <input id="shortcut-url" type="text" placeholder="https://example.com" aria-label="Shortcut website address" required>
+            <button type="submit">Add shortcut</button>
+          </form>
+          <div id="popular-site-settings"></div>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Recent history</legend>
+          <div id="recent-history-list" aria-label="Recently visited websites" aria-live="polite"></div>
+          <p class="list-empty" id="recent-history-empty">Websites you visit will appear here.</p>
+          <button type="button" class="settings-action" id="clear-history">Clear browsing history</button>
+          <label class="setting-check" for="clear-history-on-exit">
+            <input type="checkbox" id="clear-history-on-exit">
+            Clear history when this app closes
+          </label>
+          <p class="setting-description">Your recent websites stay on this device and are not included in settings exports.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Bookmark folders</legend>
+          <label for="bookmark-folder-select">Save new bookmarks to</label>
+          <select id="bookmark-folder-select"></select>
+          <div class="session-tools">
+            <input id="new-bookmark-folder" type="text" maxlength="30" placeholder="New folder name" aria-label="New bookmark folder name">
+            <button type="button" id="add-bookmark-folder">Add folder</button>
+          </div>
+          <div id="bookmark-folder-settings"></div>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Saved sessions</legend>
+          <div class="session-tools">
+            <label for="saved-session-select">Saved session</label>
+            <select id="saved-session-select"></select>
+            <input id="saved-session-name" type="text" maxlength="40" placeholder="Session name" aria-label="Saved session name">
+            <button type="button" id="save-session">Save current tabs</button>
+            <button type="button" id="load-session">Open saved session</button>
+            <button type="button" id="delete-session">Delete saved session</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Privacy</legend>
+          <label for="clear-data-scope">Data to clear</label>
+          <select id="clear-data-scope">
+            <option value="cookies">Proxy cookies</option>
+            <option value="proxy">All proxy data</option>
+            <option value="all">All app data and settings</option>
+          </select>
+          <button type="button" class="settings-action" id="clear-proxy-data">Clear selected data</button>
+          <p class="setting-description">Clearing all proxy data removes the proxy database. Reload the page afterward to restart the engine.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Backup settings</legend>
+          <div class="settings-row">
+            <button type="button" class="settings-action" id="export-settings">Export</button>
+            <button type="button" class="settings-action" id="import-settings">Import</button>
+          </div>
+          <input class="settings-file-input" type="file" id="settings-file" accept="application/json,.json">
+          <p class="setting-description">Move your themes, preferences, shortcuts, and bookmarks between browsers. Browsing history is not exported.</p>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>Keyboard shortcuts</legend>
+          <p class="setting-description">Choose Change, press the new key combination, or Reset to use the default. Use Ctrl/⌘ or Alt with a key.</p>
+          <div class="shortcut-binding-list" id="shortcut-binding-list"></div>
+        </fieldset>
+
+        <p class="settings-message" id="settings-message" role="status" hidden></p>
+      </div>
+    </div>
   </header>
 
   <main>
@@ -332,18 +1043,21 @@
         <button type="submit">Go</button>
       </form>
 
-      <div id="message"></div>
-      <div class="engine-status">
-        <span class="status-dot"></span>
-        <span class="engine-status-text">Starting browser engine...</span>
+      <div id="message" role="status" aria-live="polite"></div>
+      <div class="engine-status home-engine-status">
         <p class="engine-description">Initializing secure browser workspace.</p>
       </div>
     </section>
 
     <section class="browser" id="browser" hidden>
       <div class="tabs">
+        <input id="tab-search" type="text" aria-label="Search open tabs" placeholder="Search tabs…" autocomplete="off">
         <div id="tab-list" role="tablist" aria-label="Browser tabs"></div>
+        <p id="tab-search-status" role="status" hidden></p>
         <button type="button" id="new-tab" aria-label="New tab" title="New tab">+</button>
+        <button type="button" id="reopen-tab" aria-label="Reopen closed tab" title="Reopen closed tab" disabled>↶</button>
+        <button type="button" id="close-other-tabs" aria-label="Close other unpinned tabs" title="Close other unpinned tabs" disabled>×</button>
+        <button type="button" id="close-browser" aria-label="Close browser" title="Close browser">⌂</button>
       </div>
 
       <div class="toolbar browser-toolbar">
@@ -351,6 +1065,14 @@
         <button type="button" id="back-button" aria-label="Back" title="Back">←</button>
         <button type="button" id="forward-button" aria-label="Forward" title="Forward">→</button>
         <button type="button" id="reload-button" aria-label="Reload" title="Reload">↻</button>
+        <button
+          type="button"
+          id="sidebar-toggle"
+          aria-controls="browser-sidebar"
+          aria-expanded="true"
+          title="Collapse popular sites"
+        >Sites</button>
+        <button type="button" id="bookmark-button" aria-label="Bookmark current page" aria-pressed="false" title="Open a page to bookmark it">★</button>
 
         <input
           id="current-address"
@@ -361,6 +1083,7 @@
         <button type="button" id="navigate-button">Go</button>
         <button type="button" id="fullscreen-button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button>
       </div>
+      <p class="bookmark-feedback" id="bookmark-feedback" role="status" aria-live="polite" hidden></p>
 
       <div class="browser-workspace">
         <div id="browser-content">
@@ -381,11 +1104,18 @@
 
         <aside id="browser-sidebar" aria-label="Popular sites">
           <h3>Popular sites</h3>
-          <button type="button" class="site-link" data-url="https://poki.com/">Poki<span>Quick games</span></button>
-          <button type="button" class="site-link" data-url="https://www.coolmathgames.com/">Coolmath Games<span>Puzzles and games</span></button>
-          <button type="button" class="site-link" data-url="https://www.crazygames.com/">CrazyGames<span>Online games</span></button>
-          <button type="button" class="site-link" data-url="https://www.youtube.com/">YouTube<span>Videos</span></button>
-          <button type="button" class="site-link" data-url="https://www.google.com/">Google<span>Search</span></button>
+          <button type="button" class="site-link" data-site-id="poki" data-url="https://poki.com/">Poki<span>Quick games</span></button>
+          <button type="button" class="site-link" data-site-id="coolmath" data-url="https://www.coolmathgames.com/">Coolmath Games<span>Puzzles and games</span></button>
+          <button type="button" class="site-link" data-site-id="crazygames" data-url="https://www.crazygames.com/">CrazyGames<span>Online games</span></button>
+          <button type="button" class="site-link" data-site-id="youtube" data-url="https://www.youtube.com/">YouTube<span>Videos</span></button>
+          <button type="button" class="site-link" data-site-id="google" data-url="https://www.google.com/">Google<span>Search</span></button>
+          <h3>Bookmarks</h3>
+          <div class="bookmark-tools">
+            <input id="bookmark-search" type="text" placeholder="Search bookmarks…" aria-label="Search bookmarks" autocomplete="off">
+            <select id="bookmark-folder-filter" aria-label="Filter bookmarks by folder"></select>
+          </div>
+          <div id="bookmark-list" aria-label="Bookmarks" aria-live="polite"></div>
+          <p class="list-empty" id="bookmark-empty">Pages you bookmark will appear here.</p>
         </aside>
       </div>
     </section>
