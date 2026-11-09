@@ -4,97 +4,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blurz — Browser Workspace</title>
+  <title>BlurzProxy</title>
 
   <link rel="icon" type="image/svg+xml" href="/star.svg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/css/style.css">
 
   <style>
     :root {
-      --surface: #10101d;
-      --surface-raised: #171526;
-      --surface-soft: #201b31;
-      --border: #302344;
-      --space-glow-one: rgba(39, 54, 125, 0.25);
-      --space-glow-two: rgba(83, 35, 145, 0.22);
-      --space-glow-three: rgba(0, 104, 180, 0.18);
-      --space-base: #03040c;
-      --space-mid: #080b1b;
-      --accent: #a855f7;
-      --accent-strong: #9333ea;
-      --accent-light: #c4b5fd;
-      --accent-muted: #b7aecb;
-      --scrollbar: #6b4d91;
+      --surface: #101010;
+      --surface-raised: #171717;
+      --surface-soft: #202020;
+      --border: #303030;
+      --space-glow-one: rgba(155, 155, 155, 0.24);
+      --space-glow-two: rgba(95, 95, 95, 0.20);
+      --space-glow-three: rgba(195, 195, 195, 0.14);
+      --space-base: #030303;
+      --space-mid: #090909;
+      --accent: #a0a0a0;
+      --accent-strong: #737373;
+      --accent-light: #dedede;
+      --accent-muted: #b5b5b5;
+      --scrollbar: #666666;
     }
 
     :root[data-theme="blue"] {
-      --space-glow-one: rgba(14, 116, 190, 0.3);
-      --space-glow-two: rgba(8, 145, 178, 0.22);
-      --space-glow-three: rgba(30, 64, 175, 0.24);
-      --space-base: #020812;
-      --space-mid: #06172a;
-      --accent: #38bdf8;
-      --accent-strong: #0284c7;
-      --accent-light: #bae6fd;
-      --accent-muted: #a8c9d8;
-      --scrollbar: #28799c;
+      --space-glow-one: rgba(205, 205, 205, 0.25);
+      --space-glow-two: rgba(125, 125, 125, 0.20);
+      --space-glow-three: rgba(225, 225, 225, 0.13);
+      --space-base: #040404;
+      --space-mid: #0b0b0b;
+      --accent: #cecece;
+      --accent-strong: #969696;
+      --accent-light: #f0f0f0;
+      --accent-muted: #bdbdbd;
+      --scrollbar: #858585;
     }
 
     :root[data-theme="red"] {
-      --space-glow-one: rgba(190, 24, 93, 0.28);
-      --space-glow-two: rgba(153, 27, 27, 0.24);
-      --space-glow-three: rgba(194, 65, 12, 0.2);
-      --space-base: #0c0308;
-      --space-mid: #1b0711;
-      --accent: #fb7185;
-      --accent-strong: #e11d48;
-      --accent-light: #fecdd3;
-      --accent-muted: #d7aab1;
-      --scrollbar: #a43e55;
+      --space-glow-one: rgba(135, 135, 135, 0.25);
+      --space-glow-two: rgba(75, 75, 75, 0.20);
+      --space-glow-three: rgba(175, 175, 175, 0.13);
+      --space-base: #030303;
+      --space-mid: #090909;
+      --accent: #9e9e9e;
+      --accent-strong: #707070;
+      --accent-light: #d8d8d8;
+      --accent-muted: #b0b0b0;
+      --scrollbar: #686868;
     }
 
     :root[data-theme="orange"] {
-      --space-glow-one: rgba(194, 65, 12, 0.3);
-      --space-glow-two: rgba(180, 83, 9, 0.24);
-      --space-glow-three: rgba(153, 27, 27, 0.2);
-      --space-base: #0c0602;
-      --space-mid: #1b1006;
-      --accent: #fb923c;
-      --accent-strong: #ea580c;
-      --accent-light: #fed7aa;
-      --accent-muted: #d7b99d;
-      --scrollbar: #a85e28;
+      --space-glow-one: rgba(175, 175, 175, 0.25);
+      --space-glow-two: rgba(105, 105, 105, 0.20);
+      --space-glow-three: rgba(205, 205, 205, 0.13);
+      --space-base: #040404;
+      --space-mid: #0b0b0b;
+      --accent: #b0b0b0;
+      --accent-strong: #808080;
+      --accent-light: #e0e0e0;
+      --accent-muted: #b8b8b8;
+      --scrollbar: #777777;
     }
 
     :root[data-theme="yellow"] {
-      --space-glow-one: rgba(202, 138, 4, 0.28);
-      --space-glow-two: rgba(161, 98, 7, 0.22);
-      --space-glow-three: rgba(180, 83, 9, 0.18);
-      --space-base: #0c0a02;
-      --space-mid: #1b1606;
-      --accent: #facc15;
-      --accent-strong: #ca8a04;
-      --accent-light: #fef08a;
-      --accent-muted: #d7ce9d;
-      --scrollbar: #a88928;
+      --space-glow-one: rgba(220, 220, 220, 0.24);
+      --space-glow-two: rgba(145, 145, 145, 0.19);
+      --space-glow-three: rgba(240, 240, 240, 0.12);
+      --space-base: #050505;
+      --space-mid: #0d0d0d;
+      --accent: #d0d0d0;
+      --accent-strong: #a0a0a0;
+      --accent-light: #f5f5f5;
+      --accent-muted: #c5c5c5;
+      --scrollbar: #929292;
     }
 
     :root[data-theme="green"] {
-      --space-glow-one: rgba(5, 150, 105, 0.28);
-      --space-glow-two: rgba(22, 101, 52, 0.22);
-      --space-glow-three: rgba(13, 148, 136, 0.18);
-      --space-base: #020c08;
-      --space-mid: #061b12;
-      --accent: #4ade80;
-      --accent-strong: #16a34a;
-      --accent-light: #bbf7d0;
-      --accent-muted: #a8d8b8;
-      --scrollbar: #288c50;
+      --space-glow-one: rgba(115, 115, 115, 0.25);
+      --space-glow-two: rgba(65, 65, 65, 0.20);
+      --space-glow-three: rgba(155, 155, 155, 0.13);
+      --space-base: #020202;
+      --space-mid: #080808;
+      --accent: #858585;
+      --accent-strong: #606060;
+      --accent-light: #c9c9c9;
+      --accent-muted: #9c9c9c;
+      --scrollbar: #5e5e5e;
     }
 
     :root[data-custom-accent="true"] {
@@ -875,437 +875,6 @@
     }
   </style>
 
-  <style id="polished-interface">
-    :root,
-    :root[data-theme="purple"] {
-      color-scheme: dark;
-      --surface: #15181e;
-      --surface-raised: #1b2028;
-      --surface-soft: #222a35;
-      --border: #303946;
-      --space-glow-one: rgba(70, 86, 110, 0.12);
-      --space-glow-two: rgba(60, 75, 95, 0.08);
-      --space-glow-three: rgba(40, 55, 75, 0.08);
-      --space-base: #0d1117;
-      --space-mid: #111720;
-      --accent: #8ca8c8;
-      --accent-strong: #58799f;
-      --accent-light: #c3d0df;
-      --accent-muted: #98a5b5;
-      --scrollbar: #52657c;
-    }
-
-    :root[data-theme="blue"] {
-      --accent: #8caec5;
-      --accent-strong: #587f9e;
-      --accent-light: #c7d8e4;
-      --accent-muted: #9bafbd;
-    }
-
-    :root[data-theme="red"] {
-      --accent: #c28f96;
-      --accent-strong: #95636b;
-      --accent-light: #e2c5c9;
-      --accent-muted: #bba2a6;
-    }
-
-    :root[data-theme="orange"] {
-      --accent: #c49c7d;
-      --accent-strong: #987252;
-      --accent-light: #e3cbb5;
-      --accent-muted: #b9a28e;
-    }
-
-    :root[data-theme="yellow"] {
-      --accent: #c0b17c;
-      --accent-strong: #92834f;
-      --accent-light: #e1d8b5;
-      --accent-muted: #b7ad8e;
-    }
-
-    :root[data-theme="green"] {
-      --accent: #8eae9c;
-      --accent-strong: #5d806d;
-      --accent-light: #c5d9ce;
-      --accent-muted: #9fb6aa;
-    }
-
-    html {
-      background: #0d1117;
-      scroll-behavior: smooth;
-    }
-
-    body {
-      min-height: 100vh;
-      color: #e6edf3;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(ellipse at 50% 0%, rgba(70, 86, 110, 0.10), transparent 52%),
-        linear-gradient(180deg, #10151c 0%, #0d1117 60%, #0b0f14 100%);
-      background-attachment: fixed;
-    }
-
-    body::before {
-      display: none;
-    }
-
-    header {
-      min-height: 72px;
-      height: auto;
-      padding: 14px clamp(18px, 5vw, 64px);
-      border-bottom: 1px solid #252d38;
-      background: rgba(13, 17, 23, 0.88);
-      backdrop-filter: blur(16px);
-    }
-
-    header h2 {
-      color: #e6edf3;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-shadow: none;
-    }
-
-    main {
-      padding: clamp(18px, 3vw, 36px);
-    }
-
-    .home {
-      width: min(100%, 920px);
-      min-height: calc(100vh - 112px);
-      padding: 72px 24px;
-      transform: none;
-    }
-
-    .home h1 {
-      color: #e8edf3;
-      background: none;
-      -webkit-text-fill-color: currentColor;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: clamp(44px, 7vw, 68px);
-      font-weight: 700;
-      letter-spacing: -0.065em;
-      line-height: 1;
-      filter: none;
-    }
-
-    .home > p {
-      margin-top: 16px;
-      color: #98a5b5;
-      font-size: 14px;
-      font-weight: 400;
-      letter-spacing: 0.035em;
-      line-height: 1.6;
-    }
-
-    #proxy-form {
-      width: min(100%, 680px);
-      margin: 34px auto 20px;
-      padding: 7px;
-      gap: 8px;
-      border: 1px solid #354252;
-      border-radius: 12px;
-      background: #171e27;
-      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
-      backdrop-filter: none;
-    }
-
-    input,
-    .settings-panel input[type="text"],
-    .settings-panel select,
-    #bookmark-folder-select,
-    #bookmark-folder-filter,
-    #saved-session-select,
-    .bookmark-folder-assignment {
-      color: #e6edf3;
-      background: #111720;
-      border: 1px solid #303b49;
-      border-radius: 8px;
-      font-family: inherit;
-    }
-
-    input::placeholder {
-      color: #778494;
-    }
-
-    #url-input {
-      min-height: 48px;
-      padding: 0 14px;
-      font-size: 14px;
-    }
-
-    button {
-      min-height: 40px;
-      border: 1px solid #526b88;
-      border-radius: 8px;
-      background: #425f7e;
-      color: #f5f7fa;
-      box-shadow: none;
-      font-family: inherit;
-      font-weight: 600;
-      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
-    }
-
-    button:hover {
-      background: #526f8e;
-      border-color: #718ba7;
-      box-shadow: none;
-      transform: translateY(-1px);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    .engine-status,
-    .home-engine-status {
-      color: #aab6c4;
-    }
-
-    .home-engine-status .engine-description {
-      color: #8794a4;
-      font-size: 12px;
-    }
-
-    .browser {
-      width: min(1500px, 100%);
-      height: calc(100vh - 116px);
-      min-height: 440px;
-      margin: 0;
-      border: 1px solid #303946;
-      border-radius: 12px;
-      background: #111720;
-      box-shadow: 0 18px 55px rgba(0, 0, 0, 0.25);
-    }
-
-    .tabs,
-    .toolbar,
-    .tab-load-status,
-    .bookmark-feedback {
-      background: #171e27;
-      border-color: #2c3541;
-    }
-
-    .tabs {
-      gap: 7px;
-      padding: 9px 12px;
-    }
-
-    .tab-item {
-      border: 1px solid transparent;
-      border-radius: 7px;
-      background: #202a35;
-    }
-
-    .tab-item.active {
-      border-color: #526b88;
-      background: #344a62;
-    }
-
-    .tab,
-    .tab-close,
-    .tab-pin {
-      min-height: 36px;
-      border-radius: 6px;
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .tab:hover,
-    .tab-close:hover,
-    .tab-pin:hover {
-      background: rgba(255, 255, 255, 0.08);
-      transform: none;
-    }
-
-    .toolbar {
-      gap: 7px;
-      padding: 10px 12px;
-    }
-
-    .toolbar button {
-      min-width: 38px;
-      padding: 0 12px;
-      background: #222c38;
-      border-color: #354252;
-      color: #c8d2de;
-    }
-
-    .toolbar button:hover {
-      background: #303e4e;
-    }
-
-    #current-address {
-      min-height: 40px;
-      padding: 0 13px;
-      background: #10161e;
-      border-color: #303b49;
-      color: #dce4ed;
-    }
-
-    .browser-workspace {
-      grid-template-columns: minmax(0, 1fr) 236px;
-    }
-
-    #browser-sidebar {
-      padding: 18px 14px;
-      background: #151c25;
-      border-left-color: #303946;
-    }
-
-    #browser-sidebar h3 {
-      margin: 8px 0 12px;
-      color: #c4cfdb;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.075em;
-      text-transform: uppercase;
-    }
-
-    .site-link {
-      margin: 5px 0;
-      padding: 10px 11px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      background: transparent;
-      color: #d8e0e9;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .site-link:hover {
-      border-color: #354252;
-      background: #202a35;
-      transform: none;
-    }
-
-    .site-link span {
-      color: #8794a4;
-      font-size: 11px;
-    }
-
-    .browser-welcome h2,
-    #browser-content h2 {
-      color: #dce5ef;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-weight: 650;
-      letter-spacing: -0.04em;
-      text-shadow: none;
-    }
-
-    .browser-welcome p {
-      color: #98a5b5;
-    }
-
-    .settings-panel {
-      border: 1px solid #354252;
-      border-radius: 12px;
-      background: #171e27;
-      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
-    }
-
-    .settings-panel label,
-    .settings-section legend {
-      color: #d0dae5;
-    }
-
-    .settings-section {
-      border-bottom-color: #303946;
-    }
-
-    .settings-section .setting-description,
-    .list-empty {
-      color: #8d9aaa;
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .settings-panel button,
-    .settings-panel .settings-action {
-      min-height: 36px;
-      border-radius: 7px;
-    }
-
-    .settings-panel button:hover {
-      transform: none;
-    }
-
-    .settings-panel .remove-bookmark,
-    .settings-panel .remove-shortcut {
-      border-color: #754b52;
-      background: #53343b;
-    }
-
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible,
-    a:focus-visible {
-      outline: 2px solid #a9bfd8;
-      outline-offset: 2px;
-    }
-
-    @media (max-width: 700px) {
-      header {
-        min-height: 62px;
-        padding: 12px 16px;
-      }
-
-      main {
-        padding: 12px;
-      }
-
-      .home {
-        min-height: calc(100vh - 86px);
-        padding: 48px 12px;
-      }
-
-      .home h1 {
-        font-size: clamp(42px, 13vw, 58px);
-      }
-
-      #proxy-form {
-        flex-direction: column;
-        padding: 8px;
-        margin-top: 26px;
-      }
-
-      #proxy-form button {
-        min-height: 44px;
-      }
-
-      .browser {
-        width: 100%;
-        height: calc(100vh - 86px);
-        min-height: 420px;
-        border-radius: 10px;
-      }
-
-      .browser-workspace {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: minmax(0, 1fr) auto;
-      }
-
-      #browser-sidebar {
-        border-top: 1px solid #303946;
-      }
-
-      .settings-panel {
-        right: -4px;
-        max-height: min(78vh, 620px);
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-  </style>
 
 </head>
 
@@ -1327,12 +896,12 @@
         <fieldset class="settings-section">
           <label for="theme-select">Space theme</label>
           <select id="theme-select">
-            <option value="purple">Purple space</option>
-            <option value="blue">Blue space</option>
-            <option value="red">Red space</option>
-            <option value="orange">Orange space</option>
-            <option value="yellow">Yellow space</option>
-            <option value="green">Green space</option>
+            <option value="purple">Graphite space</option>
+            <option value="blue">Silver space</option>
+            <option value="red">Ash space</option>
+            <option value="orange">Steel space</option>
+            <option value="yellow">Pearl space</option>
+            <option value="green">Obsidian space</option>
           </select>
           <label class="accent-color-label" for="accent-color-picker">Custom accent color</label>
           <input type="color" id="accent-color-picker" value="#a855f7" aria-describedby="accent-color-description">
