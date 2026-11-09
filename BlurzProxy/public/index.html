@@ -4,13 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlurzProxy</title>
+  <title>Blurz — Browser Workspace</title>
 
   <link rel="icon" type="image/svg+xml" href="/star.svg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/css/style.css">
 
@@ -874,6 +874,439 @@
       }
     }
   </style>
+
+  <style id="polished-interface">
+    :root,
+    :root[data-theme="purple"] {
+      color-scheme: dark;
+      --surface: #15181e;
+      --surface-raised: #1b2028;
+      --surface-soft: #222a35;
+      --border: #303946;
+      --space-glow-one: rgba(70, 86, 110, 0.12);
+      --space-glow-two: rgba(60, 75, 95, 0.08);
+      --space-glow-three: rgba(40, 55, 75, 0.08);
+      --space-base: #0d1117;
+      --space-mid: #111720;
+      --accent: #8ca8c8;
+      --accent-strong: #58799f;
+      --accent-light: #c3d0df;
+      --accent-muted: #98a5b5;
+      --scrollbar: #52657c;
+    }
+
+    :root[data-theme="blue"] {
+      --accent: #8caec5;
+      --accent-strong: #587f9e;
+      --accent-light: #c7d8e4;
+      --accent-muted: #9bafbd;
+    }
+
+    :root[data-theme="red"] {
+      --accent: #c28f96;
+      --accent-strong: #95636b;
+      --accent-light: #e2c5c9;
+      --accent-muted: #bba2a6;
+    }
+
+    :root[data-theme="orange"] {
+      --accent: #c49c7d;
+      --accent-strong: #987252;
+      --accent-light: #e3cbb5;
+      --accent-muted: #b9a28e;
+    }
+
+    :root[data-theme="yellow"] {
+      --accent: #c0b17c;
+      --accent-strong: #92834f;
+      --accent-light: #e1d8b5;
+      --accent-muted: #b7ad8e;
+    }
+
+    :root[data-theme="green"] {
+      --accent: #8eae9c;
+      --accent-strong: #5d806d;
+      --accent-light: #c5d9ce;
+      --accent-muted: #9fb6aa;
+    }
+
+    html {
+      background: #0d1117;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      color: #e6edf3;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(70, 86, 110, 0.10), transparent 52%),
+        linear-gradient(180deg, #10151c 0%, #0d1117 60%, #0b0f14 100%);
+      background-attachment: fixed;
+    }
+
+    body::before {
+      display: none;
+    }
+
+    header {
+      min-height: 72px;
+      height: auto;
+      padding: 14px clamp(18px, 5vw, 64px);
+      border-bottom: 1px solid #252d38;
+      background: rgba(13, 17, 23, 0.88);
+      backdrop-filter: blur(16px);
+    }
+
+    header h2 {
+      color: #e6edf3;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-shadow: none;
+    }
+
+    main {
+      padding: clamp(18px, 3vw, 36px);
+    }
+
+    .home {
+      width: min(100%, 920px);
+      min-height: calc(100vh - 112px);
+      padding: 72px 24px;
+      transform: none;
+    }
+
+    .home h1 {
+      color: #e8edf3;
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(44px, 7vw, 68px);
+      font-weight: 700;
+      letter-spacing: -0.065em;
+      line-height: 1;
+      filter: none;
+    }
+
+    .home > p {
+      margin-top: 16px;
+      color: #98a5b5;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.035em;
+      line-height: 1.6;
+    }
+
+    #proxy-form {
+      width: min(100%, 680px);
+      margin: 34px auto 20px;
+      padding: 7px;
+      gap: 8px;
+      border: 1px solid #354252;
+      border-radius: 12px;
+      background: #171e27;
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+      backdrop-filter: none;
+    }
+
+    input,
+    .settings-panel input[type="text"],
+    .settings-panel select,
+    #bookmark-folder-select,
+    #bookmark-folder-filter,
+    #saved-session-select,
+    .bookmark-folder-assignment {
+      color: #e6edf3;
+      background: #111720;
+      border: 1px solid #303b49;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    input::placeholder {
+      color: #778494;
+    }
+
+    #url-input {
+      min-height: 48px;
+      padding: 0 14px;
+      font-size: 14px;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid #526b88;
+      border-radius: 8px;
+      background: #425f7e;
+      color: #f5f7fa;
+      box-shadow: none;
+      font-family: inherit;
+      font-weight: 600;
+      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    button:hover {
+      background: #526f8e;
+      border-color: #718ba7;
+      box-shadow: none;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .engine-status,
+    .home-engine-status {
+      color: #aab6c4;
+    }
+
+    .home-engine-status .engine-description {
+      color: #8794a4;
+      font-size: 12px;
+    }
+
+    .browser {
+      width: min(1500px, 100%);
+      height: calc(100vh - 116px);
+      min-height: 440px;
+      margin: 0;
+      border: 1px solid #303946;
+      border-radius: 12px;
+      background: #111720;
+      box-shadow: 0 18px 55px rgba(0, 0, 0, 0.25);
+    }
+
+    .tabs,
+    .toolbar,
+    .tab-load-status,
+    .bookmark-feedback {
+      background: #171e27;
+      border-color: #2c3541;
+    }
+
+    .tabs {
+      gap: 7px;
+      padding: 9px 12px;
+    }
+
+    .tab-item {
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: #202a35;
+    }
+
+    .tab-item.active {
+      border-color: #526b88;
+      background: #344a62;
+    }
+
+    .tab,
+    .tab-close,
+    .tab-pin {
+      min-height: 36px;
+      border-radius: 6px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .tab:hover,
+    .tab-close:hover,
+    .tab-pin:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: none;
+    }
+
+    .toolbar {
+      gap: 7px;
+      padding: 10px 12px;
+    }
+
+    .toolbar button {
+      min-width: 38px;
+      padding: 0 12px;
+      background: #222c38;
+      border-color: #354252;
+      color: #c8d2de;
+    }
+
+    .toolbar button:hover {
+      background: #303e4e;
+    }
+
+    #current-address {
+      min-height: 40px;
+      padding: 0 13px;
+      background: #10161e;
+      border-color: #303b49;
+      color: #dce4ed;
+    }
+
+    .browser-workspace {
+      grid-template-columns: minmax(0, 1fr) 236px;
+    }
+
+    #browser-sidebar {
+      padding: 18px 14px;
+      background: #151c25;
+      border-left-color: #303946;
+    }
+
+    #browser-sidebar h3 {
+      margin: 8px 0 12px;
+      color: #c4cfdb;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.075em;
+      text-transform: uppercase;
+    }
+
+    .site-link {
+      margin: 5px 0;
+      padding: 10px 11px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: #d8e0e9;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .site-link:hover {
+      border-color: #354252;
+      background: #202a35;
+      transform: none;
+    }
+
+    .site-link span {
+      color: #8794a4;
+      font-size: 11px;
+    }
+
+    .browser-welcome h2,
+    #browser-content h2 {
+      color: #dce5ef;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      text-shadow: none;
+    }
+
+    .browser-welcome p {
+      color: #98a5b5;
+    }
+
+    .settings-panel {
+      border: 1px solid #354252;
+      border-radius: 12px;
+      background: #171e27;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+    }
+
+    .settings-panel label,
+    .settings-section legend {
+      color: #d0dae5;
+    }
+
+    .settings-section {
+      border-bottom-color: #303946;
+    }
+
+    .settings-section .setting-description,
+    .list-empty {
+      color: #8d9aaa;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .settings-panel button,
+    .settings-panel .settings-action {
+      min-height: 36px;
+      border-radius: 7px;
+    }
+
+    .settings-panel button:hover {
+      transform: none;
+    }
+
+    .settings-panel .remove-bookmark,
+    .settings-panel .remove-shortcut {
+      border-color: #754b52;
+      background: #53343b;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 2px solid #a9bfd8;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 700px) {
+      header {
+        min-height: 62px;
+        padding: 12px 16px;
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      .home {
+        min-height: calc(100vh - 86px);
+        padding: 48px 12px;
+      }
+
+      .home h1 {
+        font-size: clamp(42px, 13vw, 58px);
+      }
+
+      #proxy-form {
+        flex-direction: column;
+        padding: 8px;
+        margin-top: 26px;
+      }
+
+      #proxy-form button {
+        min-height: 44px;
+      }
+
+      .browser {
+        width: 100%;
+        height: calc(100vh - 86px);
+        min-height: 420px;
+        border-radius: 10px;
+      }
+
+      .browser-workspace {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+
+      #browser-sidebar {
+        border-top: 1px solid #303946;
+      }
+
+      .settings-panel {
+        right: -4px;
+        max-height: min(78vh, 620px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+
 </head>
 
 <body>
