@@ -151,17 +151,6 @@ function saveSetting(key, value) {
   }
 }
 
-function safeReadJson(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw === null || raw === undefined || raw === "") return fallback;
-    const value = JSON.parse(raw);
-    return value ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 function setCustomAccent(color) {
   const root = document.documentElement;
   if (color) {
@@ -867,7 +856,7 @@ function setReduceMotion(enabled) {
 }
 
 try {
-  const savedCustomSites = safeReadJson("blurz-custom-sites", []);
+  const savedCustomSites = JSON.parse(localStorage.getItem("blurz-custom-sites") || "[]");
   if (Array.isArray(savedCustomSites)) {
     customSites = savedCustomSites.filter((site) => {
       if (!site ||
@@ -885,19 +874,19 @@ try {
   }
   syncSiteLists();
 
-  const savedTheme = localStorage.getItem("blurz-theme");
+  const savedTheme = readStoredValue("blurz-theme");
   if (themes.has(savedTheme)) {
     document.documentElement.dataset.theme = savedTheme;
     themeSelect.value = savedTheme;
   }
-  const savedAccent = localStorage.getItem("blurz-custom-accent");
+  const savedAccent = readStoredValue("blurz-custom-accent");
   if (/^#[0-9a-f]{6}$/i.test(savedAccent || "")) {
     setCustomAccent(savedAccent);
   } else {
     setCustomAccent("");
   }
   try {
-    const savedBookmarks = safeReadJson("blurz-bookmarks", []);
+    const savedBookmarks = JSON.parse(localStorage.getItem("blurz-bookmarks") || "[]");
     if (Array.isArray(savedBookmarks)) {
       bookmarks = savedBookmarks
         .filter((item) => item && typeof item.name === "string" && typeof item.url === "string")
@@ -914,7 +903,7 @@ try {
     showSettingsMessage(`Could not load bookmarks: ${error.message}`);
   }
   try {
-    const savedFolders = safeReadJson("blurz-bookmark-folders", ["Unfiled"]);
+    const savedFolders = JSON.parse(localStorage.getItem("blurz-bookmark-folders") || "[\"Unfiled\"]");
     if (Array.isArray(savedFolders)) {
       bookmarkFolders = [
         "Unfiled",
@@ -931,7 +920,7 @@ try {
     showSettingsMessage(`Could not load bookmark folders: ${error.message}`);
   }
   try {
-    const savedHistory = safeReadJson("blurz-recent-history", []);
+    const savedHistory = JSON.parse(localStorage.getItem("blurz-recent-history") || "[]");
     if (Array.isArray(savedHistory)) {
       recentHistory = savedHistory
         .filter((item) => item && typeof item.name === "string" && typeof item.url === "string")
@@ -945,20 +934,31 @@ try {
   } catch (error) {
     showSettingsMessage(`Could not load recent history: ${error.message}`);
   }
-  const savedSearchEngine = localStorage.getItem("blurz-search-engine");
+  const savedSearchEngine = readStoredValue("blurz-search-engine");
   if (searchEngines.has(savedSearchEngine)) {
     searchEngineSelect.value = savedSearchEngine;
+  }
+  const savedStartupPage = localStorage.getItem("blurz-startup-page");
+  if (startupPages.has(savedStartupPage)) {
+    startupPageSelect.value = savedStartupPage;
   }
   const savedLinkBehavior = localStorage.getItem("blurz-link-behavior");
   if (linkBehaviors.has(savedLinkBehavior)) {
     linkBehaviorSelect.value = savedLinkBehavior;
   }
-  setReduceMotion(localStorage.getItem("blurz-reduce-motion") === "true");
+  setReduceMotion(readStoredValue("blurz-reduce-motion") === "true");
   clearHistoryOnExitSetting.checked =
     localStorage.getItem("blurz-clear-history-on-exit") === "true";
   setSidebarCollapsed(localStorage.getItem("blurz-sidebar-collapsed") === "true");
+  const savedLastVisitedUrl = localStorage.getItem("blurz-last-visited-url");
+  if (savedLastVisitedUrl) {
+    const url = new URL(savedLastVisitedUrl);
+    if (["http:", "https:"].includes(url.protocol)) {
+      lastVisitedUrl = url.href;
+    }
+  }
   try {
-    const savedOpenTabs = safeReadJson("blurz-open-tabs", []);
+    const savedOpenTabs = JSON.parse(localStorage.getItem("blurz-open-tabs") || "[]");
     if (Array.isArray(savedOpenTabs)) {
       restoredOpenTabs = savedOpenTabs
         .map((entry) => {
@@ -975,7 +975,7 @@ try {
     showSettingsMessage(`Could not load the saved tab session: ${error.message}`);
   }
   try {
-    const storedSessions = safeReadJson("blurz-saved-sessions", []);
+    const storedSessions = JSON.parse(localStorage.getItem("blurz-saved-sessions") || "[]");
     if (Array.isArray(storedSessions)) {
       savedSessions = storedSessions
         .filter((session) => session && typeof session.name === "string" && Array.isArray(session.tabs))
@@ -1000,7 +1000,7 @@ try {
   }
   restoreOpenTabsButton.disabled = restoredOpenTabs.length === 0;
   try {
-    const savedBindings = JSON.parse(localStorage.getItem("blurz-shortcut-bindings") || "{}");
+    const savedBindings = readStoredJson("blurz-shortcut-bindings", {});
     if (savedBindings && typeof savedBindings === "object" && !Array.isArray(savedBindings)) {
       shortcutActions.forEach((action) => {
         const value = savedBindings[action.id];
@@ -1013,7 +1013,7 @@ try {
     showSettingsMessage(`Could not load keyboard shortcuts: ${error.message}`);
   }
 
-  const savedSites = JSON.parse(localStorage.getItem("blurz-popular-sites") || "null");
+  const savedSites = readStoredJson("blurz-popular-sites", null);
   if (savedSites && typeof savedSites === "object") {
     const savedOrder = Array.isArray(savedSites.order) ? savedSites.order : [];
     const validSavedOrder = [...new Set(savedOrder)].filter((siteId) => siteIds.includes(siteId));
