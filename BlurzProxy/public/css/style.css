@@ -336,3 +336,138 @@ button:hover {
     font-size: 36px;
   }
 }
+
+
+/* Compact layout: keep more of the page and embedded site visible */
+header {
+  height: 64px;
+  padding: 0 5%;
+}
+
+header h2 {
+  font-size: 19px;
+  letter-spacing: 3px;
+}
+
+main {
+  min-height: calc(100vh - 64px);
+  padding: 12px;
+}
+
+.home {
+  min-height: calc(100vh - 88px);
+  transform: translateY(-8px);
+}
+
+.home h1 {
+  font-size: clamp(52px, 9vw, 86px);
+  letter-spacing: 8px;
+}
+
+.home p {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+form {
+  width: min(100%, 560px);
+  margin-top: 26px;
+  padding: 7px;
+  gap: 8px;
+}
+
+input {
+  padding: 13px;
+}
+
+form button {
+  padding: 0 22px;
+}
+
+.browser {
+  width: min(1400px, 100%);
+  height: calc(100vh - 82px);
+  min-height: 320px;
+  border-radius: 12px;
+}
+
+.browser-toolbar {
+  min-height: 43px;
+  padding: 6px 10px;
+  gap: 9px;
+}
+
+.browser-toolbar button {
+  padding: 7px 13px;
+  font-size: 12px;
+}
+
+#current-address {
+  font-size: 12px;
+}
+
+.engine-status {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.browser-welcome {
+  padding: 60px 16px;
+}
+
+.browser-welcome h2 {
+  font-size: 38px;
+}
+
+@media (max-width: 600px) {
+  header {
+    height: 56px;
+    padding: 0 4%;
+  }
+
+  header h2 {
+    font-size: 17px;
+    letter-spacing: 2px;
+  }
+
+  main {
+    min-height: calc(100vh - 56px);
+    padding: 8px;
+  }
+
+  .home {
+    min-height: calc(100vh - 72px);
+  }
+
+  .home h1 {
+    font-size: clamp(42px, 13vw, 58px);
+    letter-spacing: 4px;
+  }
+
+  form {
+    margin-top: 20px;
+  }
+
+  .browser {
+    height: calc(100vh - 72px);
+    min-height: 280px;
+  }
+
+  .browser-toolbar {
+    min-height: 38px;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .browser-toolbar button {
+    padding: 7px 9px;
+  }
+
+  .browser-welcome {
+    padding: 42px 12px;
+  }
+
+  .browser-welcome h2 {
+    font-size: 30px;
+  }
+}
