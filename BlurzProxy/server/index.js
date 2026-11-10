@@ -66,6 +66,12 @@ configureWispNetworkPolicy(wisp);
 
 const sessions = new Map();
 const buckets = new Map();
+const websocketSockets = new Set();
+
+function logEvent(level, event, details = {}) {
+  const record = { timestamp: new Date().toISOString(), level, event, ...details };
+  console[level](JSON.stringify(record));
+}
 const passwordDigest = crypto.createHash("sha256").update(ADMIN_PASSWORD, "utf8").digest();
 
 function cookies(header) {
@@ -269,7 +275,9 @@ app.use((error, req, res, next) => {
   const status = error.message === "Origin not allowed." ? 403
     : Number.isInteger(error.status) && error.status >= 400 && error.status < 500
       ? error.status : 500;
-  if (status >= 500) console.error("Internal HTTP request error.");
+  if (status >= 500) logEvent("error", "http_request_error", {
+    method: req.method, path: req.path, status
+  });
   const message = status === 413 ? "Request body exceeds the 1 MB limit."
     : status === 400 ? "Invalid request body." : "Request failed.";
   res.status(status).json({ error: message });
@@ -278,10 +286,10 @@ app.use((error, req, res, next) => {
 const server = app.listen(PORT, HOST, () => {
   const address = server.address();
   const port = address && typeof address === "object" ? address.port : PORT;
-  console.log("BlurzProxy running on " + HOST + ":" + port);
+  logEvent("info", "server_started", { host: HOST, port });
 });
 server.on("error", (error) => {
-  console.error("BlurzProxy failed to start: " + error.message);
+  logEvent("error", "server_start_failed", { message: error.message });
   process.exitCode = 1;
 });
 server.keepAliveTimeout = 15000;
@@ -298,6 +306,8 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
     return;
   }
+  websocketSockets.add(socket);
+  socket.once("close", () => websocketSockets.delete(socket));
   wisp.routeRequest(request, socket, head);
 });
 
@@ -312,11 +322,16 @@ let shuttingDown = false;
 function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log("Received " + signal + "; shutting down gracefully.");
+  logEvent("info", "server_shutdown_started", { signal });
   clearInterval(cleanup);
-  server.close(() => process.exit(0));
+  for (const socket of websocketSockets) socket.destroy();
+  websocketSockets.clear();
+  server.close(() => {
+    logEvent("info", "server_shutdown_complete", { signal });
+    process.exit(0);
+  });
   setTimeout(() => {
-    console.log("Forced shutdown after timeout.");
+    logEvent("error", "server_shutdown_timeout", { signal });
     process.exit(1);
   }, 10000).unref();
 }
