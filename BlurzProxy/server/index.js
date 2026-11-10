@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const { server: wisp } = require("@mercuryworkshop/wisp-js/server");
+const { configureWispNetworkPolicy } = require("./network-policy");
 require("dotenv").config();
 
 const app = express();
@@ -35,25 +36,8 @@ app.disable("x-powered-by");
 app.disable("etag");
 app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : false);
 
-// Restrict Wisp to public web destinations. Keep this policy in the server,
-// not in browser code, because clients cannot enforce outbound network rules.
-wisp.options.allow_private_ips = false;
-wisp.options.allow_loopback_ips = false;
-wisp.options.allow_direct_ip = false;
-wisp.options.allow_udp_streams = false;
-wisp.options.allow_tcp_streams = true;
-wisp.options.port_whitelist = [80, 443];
-wisp.options.stream_limit_per_host = 16;
-wisp.options.stream_limit_total = 64;
-wisp.options.hostname_blacklist = [
-  /(^|\\.)localhost$/i,
-  /(^|\\.)local$/i,
-  /(^|\\.)internal$/i,
-  /(^|\\.)localhost\\.localdomain$/i,
-  /^metadata(?:\\.|$)/i,
-  /^metadata\\.google\\.internal$/i,
-  /^instance-data(?:\\.|$)/i
-];
+// Enforce outbound restrictions on the server-side Wisp transport.
+configureWispNetworkPolicy(wisp);
 
 const sessions = new Map();
 const buckets = new Map();
