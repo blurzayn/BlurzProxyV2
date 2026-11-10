@@ -72,6 +72,101 @@ async function authenticatedFetch(url, options = {}) {
   });
 }
 
+async function websocketUpgrade(origin, cookie) {
+  const port = Number(new URL(baseUrl).port);
+  return new Promise((resolve, reject) => {
+    const socket = net.connect(port, "127.0.0.1");
+    let response = "";
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      reject(new Error("WebSocket upgrade timed out."));
+    }, 3000);
+
+    socket.once("connect", () => {
+      const headers = [
+        "GET /wisp/ HTTP/1.1",
+        `Host: 127.0.0.1:${port}`,
+        "Upgrade: websocket",
+        "Connection: Upgrade",
+        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==",
+        "Sec-WebSocket-Version: 13",
+        `Origin: ${origin}`
+      ];
+      if (cookie) headers.push(`Cookie: ${cookie}`);
+      socket.write(headers.join("\r\n") + "\r\n\r\n");
+    });
+    socket.on("data", (chunk) => {
+      response += chunk.toString("utf8");
+      if (!response.includes("\r\n\r\n") || settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolve({ response, socket });
+    });
+    socket.once("error", (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      reject(error);
+    });
+    socket.once("close", () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      reject(new Error("Socket closed before the upgrade response."));
+    });
+  });
+}
+
+async function launchIsolatedServer(port) {
+  const url = `http://127.0.0.1:${port}`;
+  const child = spawn(process.execPath, [serverPath], {
+    cwd: path.join(__dirname, ".."),
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(port),
+      ADMIN_PASSWORD: "test-only-password-12345",
+      ALLOWED_ORIGINS: url,
+      COOKIE_SECURE: "false"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let output = "";
+  child.stdout.on("data", (chunk) => { output += chunk.toString(); });
+  child.stderr.on("data", (chunk) => { output += chunk.toString(); });
+
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    if (child.exitCode !== null) throw new Error(`Isolated server exited.\n${output}`);
+    try {
+      const response = await fetch(`${url}/healthz`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(500)
+      });
+      if (response.ok) return { child, url, getOutput: () => output };
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  child.kill("SIGKILL");
+  throw new Error(`Isolated server did not become healthy.\n${output}`);
+}
+
+async function stopIsolatedServer(instance) {
+  if (instance.child.exitCode !== null || instance.child.signalCode !== null) return;
+  instance.child.kill("SIGTERM");
+  await Promise.race([
+    once(instance.child, "exit"),
+    new Promise((resolve) => setTimeout(resolve, 4000))
+  ]);
+  if (instance.child.exitCode === null && instance.child.signalCode === null) {
+    instance.child.kill("SIGKILL");
+    await once(instance.child, "exit");
+  }
+}
+
 
 test("readiness fails when a required dependency or restricted transport is unavailable", () => {
   const packages = ["required-package"];
@@ -160,6 +255,47 @@ after(async () => {
     server.kill("SIGKILL");
     await once(server, "exit");
   }
+});
+
+
+test("Wisp WebSocket upgrades require an approved origin and an authenticated session", async () => {
+  const rejectedOrigin = await websocketUpgrade("https://untrusted.example");
+  assert.match(rejectedOrigin.response, /^HTTP\/1\.1 403/);
+  rejectedOrigin.socket.destroy();
+
+  const missingSession = await websocketUpgrade(baseUrl);
+  assert.match(missingSession.response, /^HTTP\/1\.1 403/);
+  missingSession.socket.destroy();
+
+  const login = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: baseUrl },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(login.status, 200);
+  const cookie = login.headers.get("set-cookie")?.split(";")[0];
+  assert.ok(cookie);
+
+  const accepted = await websocketUpgrade(baseUrl, cookie);
+  assert.match(accepted.response, /^HTTP\/1\.1 101/);
+  accepted.socket.destroy();
+});
+
+test("server shuts down cleanly and can restart on the same port", async () => {
+  const port = await getFreePort();
+  const first = await launchIsolatedServer(port);
+  await stopIsolatedServer(first);
+  assert.equal(first.child.exitCode, 0);
+  assert.match(first.getOutput(), /"event":"server_shutdown_complete"/);
+
+  const second = await launchIsolatedServer(port);
+  try {
+    const response = await fetch(`${second.url}/healthz`);
+    assert.equal(response.status, 200);
+  } finally {
+    await stopIsolatedServer(second);
+  }
+  assert.equal(second.child.exitCode, 0);
 });
 
 test("authentication rejects bad credentials and manages session cookies", async () => {
