@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node scripts/smoke-test.js",
+    "test": "node --test scripts/*.js",
     "test:e2e": "playwright test",
     "check": "node --check public/js/app.js && node --check server/index.js && npm test && npm run test:e2e",
     "start": "node server/index.js"
