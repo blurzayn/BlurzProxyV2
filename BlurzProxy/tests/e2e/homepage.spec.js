@@ -58,6 +58,7 @@ test("settings and theme controls are keyboard accessible", async ({ page }) => 
   await expect(theme).toBeFocused();
   await expect(theme).toHaveCSS("outline-style", "solid");
   await page.keyboard.press("Home");
+  await page.keyboard.press("Enter");
   await expect(theme).toHaveValue("purple");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "purple");
 });
