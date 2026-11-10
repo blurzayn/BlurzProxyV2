@@ -7,6 +7,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Require a session before serving the application and protected API routes.
 - [x] Require a valid session and exact approved origin for the `/wisp/` WebSocket upgrade.
 - [x] Restrict CORS to explicitly configured exact origins.
+- [x] Require an exact trusted `Origin` on all state-changing HTTP requests.
 - [x] Add login and API rate limits.
 - [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
 - [~] Keep the Codespaces forwarded port private. The devcontainer now declares port 3000 private with HTTPS forwarding; verify the live Ports panel still shows Private. Codespaces is for private development/testing, not always-on production hosting.
@@ -22,9 +23,9 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add HTTP security headers and production-safe error responses.
 - [x] Add structured server events, failed-login/rate-limit events, and authenticated uptime/memory metrics.
 - [x] Make readiness fail when required packages or the restricted Wisp transport configuration are unavailable.
-- [x] Close upgraded WebSocket sockets during graceful shutdown.
+- [x] Close upgraded WebSocket sockets during graceful shutdown, session logout, and session expiry.
 - [x] Validate request bodies and cap JSON/form bodies at 1 MB.
-- [x] Run tests for authentication, unauthorized API access, WebSocket origin/session enforcement, malformed/oversized requests, readiness failure, HTTP headers, and shutdown/restart.
+- [x] Run tests for authentication, unauthorized API access, trusted-origin enforcement, WebSocket origin/session enforcement and logout revocation, malformed/oversized requests, readiness failure, HTTP headers, and shutdown/restart.
 - [x] Run the app container as the unprivileged Node user.
 - [x] Add Compose resource limits and a readiness-based container health check.
 - [x] Keep the app service on the private Compose backend network; Caddy is the public-facing reverse proxy.
@@ -51,9 +52,9 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 1. Codespaces selected for private development/testing. Verify port 3000 is Private in the live Ports panel; do not use a Public forwarded port. Select a separate always-on host before any production release.
 2. Confirm who is allowed to use the application: one owner, a small approved group, or organization members. The current app uses one shared admin password, not individual accounts.
 3. For Codespaces, verify GitHub private-port authentication and HTTPS forwarding, and keep the port Private. For a later production host, verify the backend port is unreachable publicly and HTTPS/WSS is terminated by the approved reverse proxy.
-7. Complete an SSRF/network-egress review of Wisp, including DNS rebinding, IPv4-mapped IPv6, redirects, and public-to-private resolution changes; add regression tests before treating outbound restrictions as a security boundary.
-4. Configure production secrets in the host's secret manager and rotate any credential that may have been committed previously.
-5. Enable required branch protection checks and a manual production approval gate.
-6. Complete monitoring, backup/restore, and rollback setup and test it.
+4. Complete an SSRF/network-egress review of Wisp, including DNS rebinding, IPv4-mapped IPv6, redirects, and public-to-private resolution changes; add regression tests before treating outbound restrictions as a security boundary.
+5. Configure production secrets in the host's secret manager and rotate any credential that may have been committed previously.
+6. Enable required branch protection checks and a manual production approval gate.
+7. Complete monitoring, backup/restore, and rollback setup and test it.
 
 **Release rule:** keep deployment private and controlled. Do not expose the backend directly or proceed to a public release until the critical security, network, and automated-test phases are verified in the actual hosting environment.
