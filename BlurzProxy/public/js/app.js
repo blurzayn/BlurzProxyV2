@@ -155,7 +155,7 @@ function readStoredValue(key) {
   try {
     return localStorage.getItem(key) || "";
   } catch (error) {
-    showSettingsMessage(\`Could not read preference \${key}: \${error.message}\`);
+    showSettingsMessage(`Could not read preference ${key}: ${error.message}`);
     return "";
   }
 }
@@ -165,7 +165,7 @@ function readStoredJson(key, fallback) {
     const stored = localStorage.getItem(key);
     return stored === null ? fallback : JSON.parse(stored);
   } catch (error) {
-    showSettingsMessage(\`Could not read preference \${key}: \${error.message}\`);
+    showSettingsMessage(`Could not read preference ${key}: ${error.message}`);
     return fallback;
   }
 }
