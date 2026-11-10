@@ -8,9 +8,16 @@
     "test:e2e": "playwright test",
     "check": "node --check public/js/app.js && node --check server/index.js && npm test && npm run test:e2e",
     "start": "node server/index.js",
-    "audit": "npm audit --audit-level=low"
+    "audit": "npm audit --audit-level=low",
+    "start:codespaces": "bash ../.devcontainer/start-proxy.sh"
   },
-  "keywords": ["authenticated-browser", "web-transport", "express", "scramjet", "security"],
+  "keywords": [
+    "authenticated-browser",
+    "web-transport",
+    "express",
+    "scramjet",
+    "security"
+  ],
   "author": "BlurzProxy contributors",
   "license": "ISC",
   "type": "commonjs",
