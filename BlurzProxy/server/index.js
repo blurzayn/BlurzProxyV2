@@ -119,6 +119,7 @@ function limiter(windowMs, max, prefix) {
     res.setHeader("RateLimit-Limit", String(max));
     res.setHeader("RateLimit-Remaining", String(Math.max(0, max - bucket.count)));
     if (bucket.count > max) {
+      logEvent("warn", "rate_limit_exceeded", { route: prefix, method: req.method });
       res.setHeader("Retry-After", String(Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))));
       return res.status(429).json({ error: "Too many requests. Try again later." });
     }
@@ -242,9 +243,14 @@ function checkPackage(name) {
     return { name, installed: false, version: null };
   }
 }
-app.get("/api/status", (req, res) => res.json({
-  name: "BlurzProxy", status: "online", version: "1.0.0"
-}));
+app.get("/api/status", (req, res) => {
+  const memory = process.memoryUsage();
+  res.json({
+    name: "BlurzProxy", status: "online", version: "1.0.0",
+    uptimeSeconds: process.uptime(),
+    memoryBytes: { rss: memory.rss, heapUsed: memory.heapUsed }
+  });
+});
 app.get("/api/engines", (req, res) => res.json({
   components: packages.map(checkPackage)
 }));
