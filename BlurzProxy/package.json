@@ -1,7 +1,7 @@
 {
   "name": "blurzproxy",
   "version": "1.0.0",
-  "description": "",
+  "description": "Private, authenticated browser application with restricted web transport.",
   "main": "index.js",
   "scripts": {
     "test": "node --test scripts/*.js",
@@ -10,8 +10,8 @@
     "start": "node server/index.js",
     "audit": "npm audit --audit-level=low"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["authenticated-browser", "web-transport", "express", "scramjet", "security"],
+  "author": "BlurzProxy contributors",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
