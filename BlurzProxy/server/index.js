@@ -144,7 +144,7 @@ const apiLimiter = limiter(API_WINDOW, API_MAX, "api");
 app.use(cors({
   origin(origin, callback) {
     if (!origin) return callback(null, false);
-    if (ALLOWED_ORIGINS.has(origin.replace(/\/$/, ""))) return callback(null, true);
+    if (ALLOWED_ORIGINS.has(origin)) return callback(null, true);
     return callback(new Error("Origin not allowed."));
   },
   credentials: true,
@@ -193,7 +193,7 @@ app.get("/login", (req, res) => {
 });
 app.post("/auth/login", loginLimiter, (req, res) => {
   const origin = req.get("origin");
-  if (origin && !ALLOWED_ORIGINS.has(origin.replace(/\/$/, ""))) {
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
     logEvent("warn", "authentication_failed", { reason: "origin_not_allowed" });
     return res.status(403).json({ error: "Origin not allowed." });
   }
@@ -325,7 +325,7 @@ server.on("upgrade", (request, socket, head) => {
   const origin = request.headers.origin;
   const current = getSession({ headers: request.headers });
   if (request.url?.split("?")[0] !== "/wisp/" || !origin ||
-      !ALLOWED_ORIGINS.has(origin.replace(/\/$/, "")) || !current) {
+      !ALLOWED_ORIGINS.has(origin) || !current) {
     socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
     socket.destroy();
     return;
