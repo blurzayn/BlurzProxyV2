@@ -1182,7 +1182,7 @@ clearHistoryOnExitSetting.addEventListener("change", () => {
 
 window.addEventListener("beforeunload", () => {
   try {
-    saveOpenTabs();
+    if (tabs.some((tab) => tab.url)) saveOpenTabs();
   } catch (error) {
     console.error("Could not save open tabs before exit:", error);
   }
@@ -1190,7 +1190,7 @@ window.addEventListener("beforeunload", () => {
 
 window.addEventListener("pagehide", () => {
   try {
-    saveOpenTabs();
+    if (tabs.some((tab) => tab.url)) saveOpenTabs();
   } catch (error) {
     console.error("Could not save open tabs before page hide:", error);
   }
