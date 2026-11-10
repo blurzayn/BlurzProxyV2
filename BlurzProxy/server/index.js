@@ -83,8 +83,12 @@ function getSession(req) {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const session = sessions.get(token);
   if (!session) return null;
-  if (session.expiresAt <= Date.now()) { sessions.delete(token); return null; }
-  session.expiresAt = Date.now() + SESSION_TTL;
+  const now = Date.now();
+  if (session.expiresAt <= now || session.absoluteExpiresAt <= now) {
+    sessions.delete(token);
+    return null;
+  }
+  session.expiresAt = Math.min(now + SESSION_TTL, session.absoluteExpiresAt);
   return { token, session };
 }
 function setCookie(res, token) {
@@ -167,7 +171,12 @@ app.post("/auth/login", loginLimiter, (req, res) => {
     return res.status(401).json({ error: "Invalid credentials." });
   }
   const token = crypto.randomBytes(32).toString("hex");
-  sessions.set(token, { createdAt: Date.now(), expiresAt: Date.now() + SESSION_TTL });
+  const createdAt = Date.now();
+  sessions.set(token, {
+    createdAt,
+    expiresAt: createdAt + SESSION_TTL,
+    absoluteExpiresAt: createdAt + SESSION_TTL
+  });
   setCookie(res, token);
   res.setHeader("Cache-Control", "no-store");
   return res.json({ authenticated: true, expiresIn: SESSION_TTL });
