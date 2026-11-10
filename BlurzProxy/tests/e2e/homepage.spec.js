@@ -75,6 +75,10 @@ test("browser engine initializes without exposing an error state", async ({ page
 test("manual previous-tab restore works without restoring automatically", async ({ page }) => {
   const savedUrl = "http://127.0.0.1:3467/healthz";
   await page.goto("/");
+  await expect(page.locator("#browser-content .engine-status-text")).toHaveText(
+    "Browser engine ready",
+    { timeout: 20000 }
+  );
   await page.evaluate((url) => {
     localStorage.setItem("blurz-open-tabs", JSON.stringify([
       { url, pinned: false, active: true }
