@@ -11,13 +11,13 @@ function configureWispNetworkPolicy(wisp) {
     stream_limit_per_host: 16,
     stream_limit_total: 64,
     hostname_blacklist: [
-      /(^|\\.)localhost$/i,
-      /(^|\\.)local$/i,
-      /(^|\\.)internal$/i,
-      /(^|\\.)localhost\\.localdomain$/i,
-      /^metadata(?:\\.|$)/i,
-      /^metadata\\.google\\.internal$/i,
-      /^instance-data(?:\\.|$)/i
+      /(^|\.)localhost$/i,
+      /(^|\.)local$/i,
+      /(^|\.)internal$/i,
+      /(^|\.)localhost\.localdomain$/i,
+      /^metadata(?:\.|$)/i,
+      /^metadata\.google\.internal$/i,
+      /^instance-data(?:\.|$)/i
     ]
   });
 
