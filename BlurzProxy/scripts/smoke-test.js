@@ -86,6 +86,44 @@ after(async () => {
   }
 });
 
+test("authentication rejects bad credentials and manages session cookies", async () => {
+  const deniedOrigin = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "https://untrusted.example" },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(deniedOrigin.status, 403);
+
+  const badLogin = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: baseUrl },
+    body: JSON.stringify({ password: "incorrect-password" })
+  });
+  assert.equal(badLogin.status, 401);
+
+  const login = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: baseUrl },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(login.status, 200);
+  const setCookie = login.headers.get("set-cookie");
+  assert.match(setCookie, /HttpOnly/i);
+  assert.match(setCookie, /SameSite=Strict/i);
+  assert.match(setCookie, /Path=\\//i);
+  const cookie = setCookie.split(";")[0];
+
+  const session = await fetch(`${baseUrl}/auth/session`, { headers: { cookie } });
+  assert.deepEqual(await session.json(), { authenticated: true });
+
+  const logout = await fetch(`${baseUrl}/auth/logout`, {
+    method: "POST", headers: { cookie }
+  });
+  assert.deepEqual(await logout.json(), { authenticated: false });
+  const afterLogout = await fetch(`${baseUrl}/api/status`, { headers: { cookie } });
+  assert.equal(afterLogout.status, 401);
+});
+
 test("status, liveness, and readiness endpoints return healthy payloads", async () => {
   const [statusResponse, healthResponse, readyResponse] = await Promise.all([
     fetch(`${baseUrl}/api/status`),
