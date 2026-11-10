@@ -14,7 +14,7 @@ COOKIE_SECURE=false
 
 Use a randomly generated password of at least 16 characters. In production, serve the app over HTTPS and set `COOKIE_SECURE=true`. Add the exact HTTPS origin (scheme, host, and any non-default port) to `ALLOWED_ORIGINS`; separate multiple origins with commas and do not use wildcards. Set `TRUST_PROXY=true` only behind a trusted reverse proxy that overwrites forwarded client-IP headers.
 
-Open `/login` and sign in with `ADMIN_PASSWORD`. Sessions use an HttpOnly, SameSite=Strict cookie with an eight-hour sliding expiration. Sessions and rate-limit counters are stored in process memory and are cleared on restart. Run a single application instance unless you add shared session and rate-limit storage; otherwise sessions and limits will not be consistent across instances.
+Open `/login` and sign in with `ADMIN_PASSWORD`. Sessions use an HttpOnly, SameSite=Strict cookie with an eight-hour maximum lifetime. Sessions and rate-limit counters are stored in process memory and are cleared on restart. Run a single application instance unless you add shared session and rate-limit storage; otherwise sessions and limits will not be consistent across instances.
 
 ## Run it
 
