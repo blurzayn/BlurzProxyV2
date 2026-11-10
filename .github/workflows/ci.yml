@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Smoke, security, and browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: BlurzProxy/package-lock.json
+
+      - name: Install dependencies
+        working-directory: BlurzProxy
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: BlurzProxy
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke, security, and browser tests
+        working-directory: BlurzProxy
+        run: npm run check
