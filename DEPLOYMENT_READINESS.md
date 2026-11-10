@@ -7,9 +7,8 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Require a session before serving the application and protected API routes.
 - [x] Require a valid session and exact approved origin for the `/wisp/` WebSocket upgrade.
 - [x] Restrict CORS to explicitly configured exact origins.
-- [x] Require an exact trusted `Origin` on all state-changing HTTP requests.
+- [x] Require an exact trusted `Origin` on all state-changing HTTP requests and reject non-exact CORS origins.
 - [x] Add login and API rate limits.
-- [x] Require exact trusted origins for state-changing requests and reject non-exact CORS origins.
 - [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
 - [~] Keep the Codespaces forwarded port private. The devcontainer now declares port 3000 private with HTTPS forwarding; verify the live Ports panel still shows Private. Codespaces is for private development/testing, not always-on production hosting.
 - [~] Configure Wisp to reject direct-IP, private/reserved, loopback, and UDP destinations and limit TCP ports to 80/443. Source review of the pinned Wisp 0.5.3 implementation confirms it resolves a hostname, validates that resolved IP (including IPv4-mapped IPv6 normalization), and passes that same resolved IP into the socket connection; direct IPs are blocked. DNS cache retention is now bounded to 30 seconds / 1,024 entries. This is stronger evidence, but still not a complete SSRF assurance: add integration tests for mixed public/private DNS answers, rebinding over cache expiry, IPv6 special ranges, and actual denied connection attempts.
@@ -38,6 +37,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add CodeQL JavaScript/TypeScript analysis on pushes, pull requests, and a weekly schedule.
 - [x] Add structured logs and authenticated runtime metrics.
 - [ ] Configure operational alerts and an external uptime/memory monitoring destination after the hosting target is selected.
+- [x] Pin GitHub Actions to immutable commit SHAs and cancel superseded workflow runs.
 - [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. GitHub currently reports `main` and `security/auth-gate` as unprotected, and no repository rulesets are configured. This repository setting needs owner/admin access.
 - [ ] Configure production deployment behind a manual approval gate after the hosting target is selected.
 - [ ] Document backup, restore, and rollback procedures for the selected host, then test a restore.
