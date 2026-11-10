@@ -79,7 +79,7 @@ async function authenticatedFetch(url, options = {}) {
   const cookie = await getTestSessionCookie();
   return fetch(url, {
     ...options,
-    headers: { ...(options.headers || {}), cookie }
+    headers: { origin: baseUrl, ...(options.headers || {}), cookie }
   });
 }
 
@@ -316,7 +316,7 @@ test("logging out immediately closes WebSockets authenticated by that session", 
   assert.ok(cookie);
 
   const active = await websocketUpgrade(baseUrl, cookie);
-  assert.match(active.response, /^HTTP\\/1\\.1 101/);
+  assert.match(active.response, /^HTTP\/1\.1 101/);
   const closed = once(active.socket, "close");
   const logout = await fetch(`${baseUrl}/auth/logout`, {
     method: "POST",
@@ -343,11 +343,11 @@ test("Wisp limits concurrent WebSockets per authenticated session", async () => 
   try {
     for (let count = 0; count < 4; count += 1) {
       const upgraded = await websocketUpgrade(baseUrl, cookie);
-      assert.match(upgraded.response, /^HTTP\\/1\\.1 101/);
+      assert.match(upgraded.response, /^HTTP\/1\.1 101/);
       sockets.push(upgraded.socket);
     }
     const limited = await websocketUpgrade(baseUrl, cookie);
-    assert.match(limited.response, /^HTTP\\/1\\.1 429/);
+    assert.match(limited.response, /^HTTP\/1\.1 429/);
     limited.socket.destroy();
   } finally {
     for (const socket of sockets) socket.destroy();
