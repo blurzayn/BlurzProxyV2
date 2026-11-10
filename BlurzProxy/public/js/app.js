@@ -183,10 +183,12 @@ function saveOpenTabs() {
       pinned: tab.pinned,
       active: tab.id === activeTabId
     }))
-    .filter((tab) => !tab.url || /^https?:\/\//i.test(tab.url));
+    .filter((tab) => typeof tab.url === "string" && /^https?:\/\//i.test(tab.url));
+
+  // A blank/new-tab page must not erase the last useful restore snapshot.
+  if (!openUrls.length) return false;
   return saveSetting("blurz-open-tabs", JSON.stringify(openUrls));
 }
-
 function normalizeShortcutUrl(value) {
   const input = value.trim();
   if (!input) return null;
@@ -875,9 +877,10 @@ try {
   syncSiteLists();
 
   const savedTheme = readStoredValue("blurz-theme");
-  if (themes.has(savedTheme)) {
-    document.documentElement.dataset.theme = savedTheme;
-    themeSelect.value = savedTheme;
+  const activeTheme = themes.has(savedTheme) ? savedTheme : themeSelect.value;
+  if (themes.has(activeTheme)) {
+    document.documentElement.dataset.theme = activeTheme;
+    themeSelect.value = activeTheme;
   }
   const savedAccent = readStoredValue("blurz-custom-accent");
   if (/^#[0-9a-f]{6}$/i.test(savedAccent || "")) {
