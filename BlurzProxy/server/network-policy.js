@@ -10,6 +10,12 @@ function configureWispNetworkPolicy(wisp) {
     port_whitelist: [80, 443],
     stream_limit_per_host: 16,
     stream_limit_total: 64,
+    // Bound DNS cache retention; Wisp validates the resolved IP and connects to that same IP.
+    dns_ttl: 30,
+    dns_cache_size: 1024,
+    // Do not trust client-supplied forwarding headers for connection identity.
+    parse_real_ip: false,
+    parse_real_ip_from: [],
     hostname_blacklist: [
       /(^|\.)localhost$/i,
       /(^|\.)local$/i,
