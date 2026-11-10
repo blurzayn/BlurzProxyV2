@@ -11,6 +11,7 @@ const serverPath = path.join(__dirname, "..", "server", "index.js");
 let server;
 let baseUrl;
 let serverOutput = "";
+let sessionCookiePromise;
 
 async function getFreePort() {
   const probe = net.createServer();
@@ -57,15 +58,25 @@ async function startServer() {
   throw new Error(`Server did not become ready.\n${serverOutput}`);
 }
 
+async function getTestSessionCookie() {
+  if (!sessionCookiePromise) {
+    sessionCookiePromise = (async () => {
+      const login = await fetch(`${baseUrl}/auth/login`, {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: baseUrl },
+        body: JSON.stringify({ password: "test-only-password-12345" })
+      });
+      assert.equal(login.status, 200);
+      const cookie = login.headers.get("set-cookie")?.split(";")[0];
+      assert.ok(cookie, "login should issue a session cookie");
+      return cookie;
+    })();
+  }
+  return sessionCookiePromise;
+}
+
 async function authenticatedFetch(url, options = {}) {
-  const login = await fetch(`${baseUrl}/auth/login`, {
-    method: "POST",
-    headers: { "content-type": "application/json", origin: baseUrl },
-    body: JSON.stringify({ password: "test-only-password-12345" })
-  });
-  assert.equal(login.status, 200);
-  const cookie = login.headers.get("set-cookie")?.split(";")[0];
-  assert.ok(cookie, "login should issue a session cookie");
+  const cookie = await getTestSessionCookie();
   return fetch(url, {
     ...options,
     headers: { ...(options.headers || {}), cookie }
