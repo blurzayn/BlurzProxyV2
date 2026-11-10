@@ -34,6 +34,25 @@ jobs:
         working-directory: BlurzProxy
         run: npm run audit
 
+  production-image:
+    name: Production container build and Compose validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate production Compose configuration
+        working-directory: BlurzProxy
+        env:
+          ADMIN_PASSWORD: ci-only-placeholder-password-not-for-deployment
+          DOMAIN: proxy.example.invalid
+        run: docker compose config --quiet
+
+      - name: Build production container image
+        working-directory: BlurzProxy
+        run: docker build --tag blurzproxy:ci .
+
   test:
     name: Smoke, security, and browser tests
     runs-on: ubuntu-latest
