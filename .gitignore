@@ -1,9 +1,15 @@
+# Dependencies and generated output
 node_modules/
-.env
-.env.*
-!.env.example
 npm-debug.log*
 pnpm-debug.log*
 .DS_Store
+
+# Secrets: ignore environment files in every directory.
+**/.env
+**/.env.*
+# Keep only the documented, non-secret templates.
+!**/.env.example
+
+# Test output
 BlurzProxy/test-results/
 BlurzProxy/playwright-report/
