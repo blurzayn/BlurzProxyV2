@@ -9,6 +9,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Restrict CORS to explicitly configured exact origins.
 - [x] Require an exact trusted `Origin` on all state-changing HTTP requests.
 - [x] Add login and API rate limits.
+- [x] Require exact trusted origins for state-changing requests and reject non-exact CORS origins.
 - [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
 - [~] Keep the Codespaces forwarded port private. The devcontainer now declares port 3000 private with HTTPS forwarding; verify the live Ports panel still shows Private. Codespaces is for private development/testing, not always-on production hosting.
 - [~] Configure Wisp to reject direct-IP, private/reserved, loopback, and UDP destinations and limit TCP ports to 80/443. Source review of the pinned Wisp 0.5.3 implementation confirms it resolves a hostname, validates that resolved IP (including IPv4-mapped IPv6 normalization), and passes that same resolved IP into the socket connection; direct IPs are blocked. DNS cache retention is now bounded to 30 seconds / 1,024 entries. This is stronger evidence, but still not a complete SSRF assurance: add integration tests for mixed public/private DNS answers, rebinding over cache expiry, IPv6 special ranges, and actual denied connection attempts.
@@ -24,8 +25,9 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add structured server events, failed-login/rate-limit events, and authenticated uptime/memory metrics.
 - [x] Make readiness fail when required packages or the restricted Wisp transport configuration are unavailable.
 - [x] Close upgraded WebSocket sockets during graceful shutdown, session logout, and session expiry.
+- [x] Cap concurrent Wisp WebSockets at four per session and 64 process-wide.
 - [x] Validate request bodies and cap JSON/form bodies at 1 MB.
-- [x] Run tests for authentication, unauthorized API access, exact trusted-origin enforcement, WebSocket origin/session enforcement and logout revocation, Wisp policy configuration, malformed/oversized requests, readiness failure, HTTP headers, and shutdown/restart.
+- [x] Run tests for authentication, unauthorized API access, exact trusted-origin enforcement, WebSocket origin/session enforcement and logout revocation, Wisp policy configuration and per-session WebSocket caps, malformed/oversized requests, readiness failure, HTTP headers, and shutdown/restart.
 - [x] Run the app container as the unprivileged Node user.
 - [x] Add Compose resource limits and a readiness-based container health check.
 - [x] Keep the app service on the private Compose backend network; Caddy is the public-facing reverse proxy.
