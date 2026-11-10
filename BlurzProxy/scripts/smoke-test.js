@@ -342,6 +342,21 @@ test("server shuts down cleanly and can restart on the same port", async () => {
   assert.equal(second.child.exitCode, 0);
 });
 
+test("state-changing requests reject missing and untrusted origins", async () => {
+  const missingOrigin = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(missingOrigin.status, 403);
+
+  const untrustedOrigin = await fetch(`${baseUrl}/auth/logout`, {
+    method: "POST",
+    headers: { origin: "https://untrusted.example" }
+  });
+  assert.equal(untrustedOrigin.status, 403);
+});
+
 test("authentication rejects bad credentials and manages session cookies", async () => {
   const deniedOrigin = await fetch(`${baseUrl}/auth/login`, {
     method: "POST",
@@ -373,7 +388,7 @@ test("authentication rejects bad credentials and manages session cookies", async
   assert.deepEqual(await session.json(), { authenticated: true });
 
   const logout = await fetch(`${baseUrl}/auth/logout`, {
-    method: "POST", headers: { cookie }
+    method: "POST", headers: { cookie, origin: baseUrl }
   });
   assert.deepEqual(await logout.json(), { authenticated: false });
   const afterLogout = await fetch(`${baseUrl}/api/status`, { headers: { cookie } });
