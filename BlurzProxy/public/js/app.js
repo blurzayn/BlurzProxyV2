@@ -151,6 +151,25 @@ function saveSetting(key, value) {
   }
 }
 
+function readStoredValue(key) {
+  try {
+    return localStorage.getItem(key) || "";
+  } catch (error) {
+    showSettingsMessage(\`Could not read preference \${key}: \${error.message}\`);
+    return "";
+  }
+}
+
+function readStoredJson(key, fallback) {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored === null ? fallback : JSON.parse(stored);
+  } catch (error) {
+    showSettingsMessage(\`Could not read preference \${key}: \${error.message}\`);
+    return fallback;
+  }
+}
+
 function setCustomAccent(color) {
   const root = document.documentElement;
   if (color) {
