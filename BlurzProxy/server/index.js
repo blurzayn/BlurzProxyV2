@@ -87,8 +87,18 @@ function logEvent(level, event, details = {}) {
   const record = { timestamp: new Date().toISOString(), level, event, ...details };
   console[level](JSON.stringify(record));
 }
+// OWASP-recommended scrypt profile: N=2^17, r=8, p=1 (128 MiB).
+// Keep verification asynchronous and cap concurrent derivations below.
+const SCRYPT_OPTIONS = Object.freeze({
+  N: 1 << 17,
+  r: 8,
+  p: 1,
+  maxmem: 256 * 1024 * 1024
+});
 const passwordSalt = crypto.randomBytes(16);
-const passwordDigest = crypto.scryptSync(ADMIN_PASSWORD, passwordSalt, 64);
+const passwordDigest = crypto.scryptSync(ADMIN_PASSWORD, passwordSalt, 64, SCRYPT_OPTIONS);
+let activePasswordChecks = 0;
+const MAX_ACTIVE_PASSWORD_CHECKS = 2;
 
 function cookies(header) {
   const result = Object.create(null);
@@ -201,12 +211,24 @@ app.post("/auth/login", loginLimiter, async (req, res) => {
     return res.status(403).json({ error: "Origin not allowed." });
   }
   const supplied = typeof req.body?.password === "string" ? req.body.password : "";
-  const digest = await new Promise((resolve, reject) => {
-    crypto.scrypt(supplied, passwordSalt, 64, (error, derivedKey) => {
-      if (error) return reject(error);
-      resolve(derivedKey);
+  if (activePasswordChecks >= MAX_ACTIVE_PASSWORD_CHECKS) {
+    res.setHeader("Retry-After", "2");
+    return res.status(429).json({ error: "Authentication is busy. Try again shortly." });
+  }
+
+  activePasswordChecks += 1;
+  let digest;
+  try {
+    digest = await new Promise((resolve, reject) => {
+      crypto.scrypt(supplied, passwordSalt, 64, SCRYPT_OPTIONS, (error, derivedKey) => {
+        if (error) return reject(error);
+        resolve(derivedKey);
+      });
     });
-  });
+  } finally {
+    activePasswordChecks -= 1;
+  }
+
   if (!crypto.timingSafeEqual(passwordDigest, digest)) {
     logEvent("warn", "authentication_failed", { reason: "invalid_credentials" });
     return res.status(401).json({ error: "Invalid credentials." });
