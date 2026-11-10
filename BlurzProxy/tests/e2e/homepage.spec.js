@@ -35,11 +35,6 @@ test("opens on the homepage and leaves saved tabs unopened", async ({ page }) =>
   ]);
   await page.reload();
   await expect(page.locator("#browser")).toBeHidden();
-  console.log("RESTORE_DEBUG", await page.evaluate(() => ({
-    stored: localStorage.getItem("blurz-open-tabs"),
-    buttonDisabled: document.querySelector("#restore-open-tabs").disabled,
-    theme: document.documentElement.dataset.theme
-  })));
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("button", { name: "Restore previous tabs" })).toBeEnabled();
   await page.waitForTimeout(500);
