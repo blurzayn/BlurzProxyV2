@@ -2,12 +2,25 @@
 
 A browser-based web proxy powered by Scramjet.
 
+## Configure access before starting
+
+The server fails closed unless an administrator password and at least one exact trusted browser origin are configured. Create `BlurzProxy/.env` from this template and never commit real secrets:
+
+```dotenv
+ADMIN_PASSWORD=replace-with-a-random-secret-at-least-16-characters-long
+ALLOWED_ORIGINS=http://localhost:3000
+COOKIE_SECURE=false
+```
+
+Use a randomly generated password of at least 16 characters. In production, serve the app over HTTPS and set `COOKIE_SECURE=true`. Add the exact HTTPS origin (scheme, host, and any non-default port) to `ALLOWED_ORIGINS`; separate multiple origins with commas and do not use wildcards. Set `TRUST_PROXY=true` only behind a trusted reverse proxy that overwrites forwarded client-IP headers.
+
+Open `/login` and sign in with `ADMIN_PASSWORD`. Sessions use an HttpOnly, SameSite=Strict cookie with an eight-hour sliding expiration. Sessions are stored in process memory and are invalidated on restart; multi-instance deployments need a shared session store.
+
 ## Run it
 
 Install [Node.js](https://nodejs.org/), then run:
 
 ```bash
-git clone https://github.com/blurzayn/BlurzProxyV2.git
 cd BlurzProxyV2/BlurzProxy
 npm ci
 npx playwright install chromium
@@ -16,53 +29,23 @@ npm run check
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open `http://localhost:3000` and sign in using the configured password.
 
-`npm test` runs server integration tests. `npm run check` also launches Chromium
-and tests homepage-first startup, manual tab restore, proxy navigation,
-bookmarks, keyboard shortcuts, keyboard focus, 320px/390px mobile layouts, and
-automated WCAG 2.1 AA checks for every theme. On Linux, install Chromium's
-system libraries once with:
+`npm test` runs server integration tests. `npm run check` also launches Chromium and tests homepage-first startup, manual tab restore, proxy navigation, bookmarks, keyboard shortcuts, keyboard focus, 320px/390px mobile layouts, and automated WCAG 2.1 AA checks for every theme. On Linux, install Chromium's system libraries once with:
 
 ```bash
 npx playwright install-deps chromium
 ```
 
-The app also exposes health endpoints for local monitoring:
+## Security and monitoring
 
-- `/healthz` for basic liveness
-- `/readyz` for readiness
-- `/api/status` for the current status payload
-
-The browser always opens on its homepage. Previous tabs are not opened
-automatically; choose **Restore previous tabs** in Settings or open a saved
-session when you want to resume browsing. Closed tabs can be reopened with
-`Ctrl+Shift+T`. The browser also includes copying the current address and
-per-tab load failure messages.
-Remote pages use the host browser's native
-download behavior; BlurzProxy does not intercept downloads or provide a separate
-download queue.
-
-The HTTP server limits parsed request bodies to 1 MB, returns bounded JSON errors
-for malformed or oversized bodies, and applies request/header timeouts. Its
-current proxy transport is WebSocket-based, so HTTP upstream retry behavior is
-not applicable to proxied page requests.
+- `/healthz` and `/readyz` are unauthenticated liveness/readiness checks only.
+- `/api/status` and `/api/engines` require a valid session.
+- The application, vendor assets, API routes, and `/wisp/` WebSocket transport require authentication. WebSocket upgrades additionally require an exact allowlisted `Origin`.
+- CORS is restricted to `ALLOWED_ORIGINS`; login and API requests have per-IP rate limits.
+- Parsed request bodies are limited to 1 MB and HTTP request/header timeouts are configured.
 
 ## GitHub Codespaces
 
-The Codespaces configuration installs dependencies and starts the server whenever
-the Codespace starts or resumes, waits for `/api/status` to respond, then forwards
-port 3000 as a **private** port. After adding this configuration to an existing
-Codespace, rebuild its container once for the startup and port-forwarding
-settings to take effect.
+Configure `ADMIN_PASSWORD` and `ALLOWED_ORIGINS` as Codespaces secrets or environment variables before starting the server. Include the exact forwarded Codespaces origin in `ALLOWED_ORIGINS`. Keep port 3000 private. The startup check uses `/healthz`, which intentionally remains public for readiness probes and does not grant application access.
 
-If the app still returns 502, check that port 3000 is forwarded in the Codespaces
-**Ports** panel, then inspect `/tmp/blurzproxy.log` in the terminal. The app also
-shows a Retry button and recovery hint when its server or proxy engine is
-unavailable. The private port setting is not a substitute for application access
-controls: do not make the port public or deploy the proxy publicly until access
-controls have been added.
-
-## Note
-
-The proxy is intended for local or controlled use. Don’t expose it publicly without adding access controls.
