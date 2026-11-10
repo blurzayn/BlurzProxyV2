@@ -49,3 +49,27 @@ npx playwright install-deps chromium
 
 Configure `ADMIN_PASSWORD` and `ALLOWED_ORIGINS` as Codespaces secrets or environment variables before starting the server. Include the exact forwarded Codespaces origin in `ALLOWED_ORIGINS`. Keep port 3000 private. The startup check uses `/healthz`, which intentionally remains public for readiness probes and does not grant application access.
 
+
+## Production deployment (Docker + Caddy)
+
+The example deployment keeps the Node application off the host's published ports. Only Caddy publishes ports 80/443; Caddy forwards HTTP and WebSocket traffic over the private Docker backend network. Caddy obtains and renews HTTPS certificates automatically.
+
+1. Point your domain's DNS A/AAAA records at the deployment host.
+2. Create a deployment-only `.env` file in `BlurzProxy/` (never commit it):
+
+   ```dotenv
+   DOMAIN=proxy.example.com
+   ADMIN_PASSWORD=replace-with-a-random-secret-at-least-16-characters-long
+   ```
+
+3. Start the stack from the `BlurzProxy` directory:
+
+   ```bash
+   docker compose up --build -d
+   ```
+
+The app container has no `ports` mapping. Its port 3000 is only exposed to the backend Docker network, while Caddy is the only service publishing public web ports. The app binds to `0.0.0.0` only inside that isolated container network so Caddy can reach it; do not publish port 3000 on the host or attach the app to a public ingress network. The default non-container server bind is `127.0.0.1`.
+
+The server-side Wisp policy permits TCP web traffic only on ports 80/443, disables UDP and direct-IP destinations, blocks loopback/private IP destinations, blocks common internal/metadata hostnames, and caps concurrent streams. This is a baseline safeguard, not a replacement for host/cloud egress controls: configure the deployment firewall to deny outbound connections to private, loopback, link-local, multicast, and cloud-metadata ranges, and allow only the DNS and public web egress your deployment needs. Do not attach administrative services or control-plane interfaces to the app's network.
+
+Keep the deployment `.env` outside version control, use a unique high-entropy password, and allow inbound 80/443 only. The app's `/healthz` endpoint is intentionally unauthenticated for container health checks and must not be treated as an application API.
