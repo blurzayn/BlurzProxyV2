@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../BlurzProxy"
 
 log_file=/tmp/blurzproxy.log
 
-if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:3000/api/status >/dev/null; then
+if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:3000/healthz >/dev/null; then
   echo "BlurzProxy is already responding on port 3000."
   exit 0
 fi
@@ -14,7 +14,7 @@ nohup npm start >"$log_file" 2>&1 </dev/null &
 server_pid=$!
 
 for attempt in $(seq 1 30); do
-  if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:3000/api/status >/dev/null; then
+  if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:3000/healthz >/dev/null; then
     echo "BlurzProxy is ready on port 3000."
     exit 0
   fi
