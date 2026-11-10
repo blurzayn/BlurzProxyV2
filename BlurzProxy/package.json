@@ -7,25 +7,29 @@
     "test": "node --test scripts/*.js",
     "test:e2e": "playwright test",
     "check": "node --check public/js/app.js && node --check server/index.js && npm test && npm run test:e2e",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "audit": "npm audit --audit-level=low"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@mercuryworkshop/bare-mux": "^2.1.9",
-    "@mercuryworkshop/epoxy-transport": "^3.0.2",
-    "@mercuryworkshop/libcurl-transport": "^2.0.6",
-    "@mercuryworkshop/wisp-js": "^0.5.3",
-    "@titaniumnetwork-dev/ultraviolet": "^3.2.10",
-    "@useinterstellar/scramjet": "^1.1.0-fixed",
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.9",
-    "express": "^5.3.0"
+    "@mercuryworkshop/bare-mux": "2.1.9",
+    "@mercuryworkshop/epoxy-transport": "3.0.2",
+    "@mercuryworkshop/libcurl-transport": "2.0.6",
+    "@mercuryworkshop/wisp-js": "0.5.3",
+    "@titaniumnetwork-dev/ultraviolet": "3.2.10",
+    "@useinterstellar/scramjet": "1.1.0-fixed",
+    "cors": "2.8.6",
+    "dotenv": "18.0.9",
+    "express": "5.3.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.14.0",
-    "@playwright/test": "^1.65.0"
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
