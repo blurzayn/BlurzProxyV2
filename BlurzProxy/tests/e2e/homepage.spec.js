@@ -141,14 +141,6 @@ test("mobile homepage has no horizontal overflow and keeps address controls tapp
       button.getBoundingClientRect().height
     )
   }));
-  console.log("MOBILE_TOOLBAR_DEBUG", await page.evaluate(() =>
-    [...document.querySelectorAll(".browser-toolbar > button")].map((button) => ({
-      id: button.id,
-      height: button.getBoundingClientRect().height,
-      minHeight: getComputedStyle(button).minHeight,
-      display: getComputedStyle(button).display
-    }))
-  ));
   expect(browserDimensions.document).toBeLessThanOrEqual(browserDimensions.viewport);
   expect(browserDimensions.toolbarButtons.every((height) => height >= 44)).toBe(true);
 });
