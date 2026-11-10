@@ -24,7 +24,8 @@ const ALLOWED_ORIGINS = new Set(configuredOrigins.map((value) => {
   let parsed;
   try { parsed = new URL(value); }
   catch { throw new Error("ALLOWED_ORIGINS must contain valid exact origins."); }
-  if (!["http:", "https:"].includes(parsed.protocol) || parsed.origin !== value.replace(/\/$/, "") ||
+  if (!["http:", "https:"].includes(parsed.protocol) ||
+      (process.env.NODE_ENV === "production" && parsed.protocol !== "https:") || parsed.origin !== value.replace(/\/$/, "") ||
       parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash ||
       value.includes("*")) {
     throw new Error("ALLOWED_ORIGINS must contain valid exact origins without paths or wildcards.");
