@@ -9,7 +9,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Restrict CORS to explicitly configured exact origins.
 - [x] Add login and API rate limits.
 - [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
-- [~] Keep the application backend off the public edge. Compose exposes the app only to its private backend network; the actual host firewall and network configuration still need verification.
+- [~] Keep the Codespaces forwarded port private. The devcontainer now declares port 3000 private with HTTPS forwarding; verify the live Ports panel still shows Private. Codespaces is for private development/testing, not always-on production hosting.
 - [x] Restrict Wisp destinations to public IPs and TCP ports 80/443; reject direct-IP, private, loopback, and UDP access.
 - [~] Keep production secrets out of source control, validate required startup settings, and use a template-only `.env.example`. Historical Git contents and any required credential rotation must be checked separately.
 
@@ -48,9 +48,9 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 
 ## Production release blockers
 
-1. Select the hosting target and verify its ingress/firewall rules. The plan lists Codespaces, VPS, Docker hosting, private home server, or another target.
+1. Codespaces selected for private development/testing. Verify port 3000 is Private in the live Ports panel; do not use a Public forwarded port. Select a separate always-on host before any production release.
 2. Confirm who is allowed to use the application: one owner, a small approved group, or organization members. The current app uses one shared admin password, not individual accounts.
-3. Verify that the deployed backend port is unreachable from public networks and that HTTPS/WSS is terminated by the approved reverse proxy.
+3. For Codespaces, verify GitHub private-port authentication and HTTPS forwarding, and keep the port Private. For a later production host, verify the backend port is unreachable publicly and HTTPS/WSS is terminated by the approved reverse proxy.
 4. Configure production secrets in the host's secret manager and rotate any credential that may have been committed previously.
 5. Enable required branch protection checks and a manual production approval gate.
 6. Complete monitoring, backup/restore, and rollback setup and test it.
