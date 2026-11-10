@@ -335,7 +335,7 @@ server.on("upgrade", (request, socket, head) => {
   let sockets = sessionSockets.get(current.token);
   if (websocketSockets.size >= MAX_WEBSOCKETS_TOTAL ||
       (sockets && sockets.size >= MAX_WEBSOCKETS_PER_SESSION)) {
-    socket.write("HTTP/1.1 429 Too Many Requests\\r\\nConnection: close\\r\\nRetry-After: 60\\r\\n\\r\\n");
+    socket.write("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\nRetry-After: 60\r\n\r\n");
     socket.destroy();
     return;
   }
