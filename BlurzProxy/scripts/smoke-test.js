@@ -301,6 +301,30 @@ test("Wisp WebSocket upgrades require an approved origin and an authenticated se
   accepted.socket.destroy();
 });
 
+test("logging out immediately closes WebSockets authenticated by that session", async () => {
+  const login = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: baseUrl },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(login.status, 200);
+  const cookie = login.headers.get("set-cookie")?.split(";")[0];
+  assert.ok(cookie);
+
+  const active = await websocketUpgrade(baseUrl, cookie);
+  assert.match(active.response, /^HTTP\\/1\\.1 101/);
+  const closed = once(active.socket, "close");
+  const logout = await fetch(`${baseUrl}/auth/logout`, {
+    method: "POST",
+    headers: { cookie, origin: baseUrl }
+  });
+  assert.equal(logout.status, 200);
+  await Promise.race([
+    closed,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Session logout did not close its WebSocket.")), 2000))
+  ]);
+});
+
 test("server shuts down cleanly and can restart on the same port", async () => {
   const port = await getFreePort();
   const first = await launchIsolatedServer(port);
