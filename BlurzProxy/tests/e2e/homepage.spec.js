@@ -1,6 +1,13 @@
 const { expect, test } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
 
+test.beforeEach(async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Access password").fill("test-only-password-12345");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\\/$/);
+});
+
 test("opens on the homepage and leaves saved tabs unopened", async ({ page }) => {
   const unexpectedDestinations = [];
   page.on("request", (request) => {
