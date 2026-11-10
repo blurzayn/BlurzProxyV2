@@ -45,9 +45,19 @@ npx playwright install-deps chromium
 - CORS is restricted to `ALLOWED_ORIGINS`; login and API requests have per-IP rate limits.
 - Parsed request bodies are limited to 1 MB and HTTP request/header timeouts are configured.
 
-## GitHub Codespaces
+## GitHub Codespaces (private development use)
 
-Configure `ADMIN_PASSWORD` and `ALLOWED_ORIGINS` as Codespaces secrets or environment variables before starting the server. Include the exact forwarded Codespaces origin in `ALLOWED_ORIGINS`. Keep port 3000 private. The startup check uses `/healthz`, which intentionally remains public for readiness probes and does not grant application access.
+Codespaces is a development environment, not an always-on production host. Use it to develop and test BlurzProxy; do not treat a forwarded port as a permanent public deployment.
+
+1. In the repository on GitHub, open **Settings → Secrets and variables → Codespaces** and create a Codespaces secret named `ADMIN_PASSWORD`. Use a unique random value of at least 16 characters. Do not put the value in this repository, a committed `.env` file, terminal output, or screenshots.
+2. Rebuild or restart the Codespace so the secret is available to its environment.
+3. The dev container binds to `0.0.0.0` inside the Codespace and configures port 3000 as **Private** with HTTPS forwarding. Keep it Private in the Ports panel; never change it to Public.
+4. The startup script derives the exact forwarded origin from GitHub's `CODESPACE_NAME` and `GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN` variables. You normally do not need to set `ALLOWED_ORIGINS` yourself. If you explicitly set it, it must exactly match the forwarded HTTPS origin.
+5. Open the forwarded port URL and sign in with the secret value.
+
+GitHub documents that private forwarded ports require GitHub authentication, while public ports can be reached by anyone who knows the URL. The app's own password remains required as a second access control. The unauthenticated `/healthz` and `/readyz` endpoints only report service status and do not grant application access.
+
+Stop the Codespace when finished. Its runtime and forwarded URL are not an always-on service, and in-memory sessions are cleared when the server restarts.
 
 
 ## Production deployment (Docker + Caddy)
