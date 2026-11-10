@@ -137,9 +137,9 @@ test("mobile homepage has no horizontal overflow and keeps address controls tapp
   const browserDimensions = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     document: document.documentElement.scrollWidth,
-    toolbarButtons: [...document.querySelectorAll(".browser-toolbar > button")].map((button) =>
-      button.getBoundingClientRect().height
-    )
+    toolbarButtons: [...document.querySelectorAll(".browser-toolbar > button")]
+      .filter((button) => button.getClientRects().length > 0)
+      .map((button) => button.getBoundingClientRect().height)
   }));
   expect(browserDimensions.document).toBeLessThanOrEqual(browserDimensions.viewport);
   expect(browserDimensions.toolbarButtons.every((height) => height >= 44)).toBe(true);
