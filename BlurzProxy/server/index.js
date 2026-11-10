@@ -8,7 +8,7 @@ require("dotenv").config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = process.env.HOST || "127.0.0.1";
 const COOKIE = "blurzproxy_session";
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 const LOGIN_WINDOW = 15 * 60 * 1000;
@@ -34,6 +34,26 @@ if (process.env.NODE_ENV === "production" && !COOKIE_SECURE) {
 app.disable("x-powered-by");
 app.disable("etag");
 app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : false);
+
+// Restrict Wisp to public web destinations. Keep this policy in the server,
+// not in browser code, because clients cannot enforce outbound network rules.
+wisp.options.allow_private_ips = false;
+wisp.options.allow_loopback_ips = false;
+wisp.options.allow_direct_ip = false;
+wisp.options.allow_udp_streams = false;
+wisp.options.allow_tcp_streams = true;
+wisp.options.port_whitelist = [80, 443];
+wisp.options.stream_limit_per_host = 16;
+wisp.options.stream_limit_total = 64;
+wisp.options.hostname_blacklist = [
+  /(^|\\.)localhost$/i,
+  /(^|\\.)local$/i,
+  /(^|\\.)internal$/i,
+  /(^|\\.)localhost\\.localdomain$/i,
+  /^metadata(?:\\.|$)/i,
+  /^metadata\\.google\\.internal$/i,
+  /^instance-data(?:\\.|$)/i
+];
 
 const sessions = new Map();
 const buckets = new Map();
