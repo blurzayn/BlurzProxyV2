@@ -56,7 +56,7 @@ app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   if (process.env.NODE_ENV === "production") {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    res.setHeader("Strict-Transport-Security", "max-age=31536000");
   }
   next();
 });
@@ -170,11 +170,13 @@ app.get("/login", (req, res) => {
 app.post("/auth/login", loginLimiter, (req, res) => {
   const origin = req.get("origin");
   if (origin && !ALLOWED_ORIGINS.has(origin.replace(/\/$/, ""))) {
+    logEvent("warn", "authentication_failed", { reason: "origin_not_allowed" });
     return res.status(403).json({ error: "Origin not allowed." });
   }
   const supplied = typeof req.body?.password === "string" ? req.body.password : "";
   const digest = crypto.createHash("sha256").update(supplied, "utf8").digest();
   if (!crypto.timingSafeEqual(passwordDigest, digest)) {
+    logEvent("warn", "authentication_failed", { reason: "invalid_credentials" });
     return res.status(401).json({ error: "Invalid credentials." });
   }
   const token = crypto.randomBytes(32).toString("hex");
