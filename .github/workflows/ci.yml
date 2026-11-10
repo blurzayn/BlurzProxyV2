@@ -49,6 +49,12 @@ jobs:
           DOMAIN: proxy.example.invalid
         run: docker compose config --quiet
 
+      - name: Validate Caddy reverse-proxy configuration
+        working-directory: BlurzProxy
+        env:
+          DOMAIN: proxy.example.invalid
+        run: docker run --rm --env DOMAIN --volume "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
       - name: Build production container image
         working-directory: BlurzProxy
         run: docker build --tag blurzproxy:ci .
