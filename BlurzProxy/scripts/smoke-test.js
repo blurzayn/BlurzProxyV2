@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 const { once } = require("node:events");
 const net = require("node:net");
 const path = require("node:path");
@@ -86,6 +86,33 @@ test("Wisp transport blocks private infrastructure and non-web services", () => 
   assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("localhost")));
   assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("metadata.google.internal")));
   assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("service.internal")));
+});
+
+test("production startup rejects placeholder secrets and wildcard origins", () => {
+  const baseEnv = {
+    ...process.env,
+    NODE_ENV: "production",
+    ADMIN_PASSWORD: "replace-with-a-random-secret-at-least-16-characters-long",
+    ALLOWED_ORIGINS: "https://proxy.example.com",
+    COOKIE_SECURE: "true"
+  };
+  const placeholder = spawnSync(process.execPath, [serverPath], {
+    cwd: path.join(__dirname, ".."),
+    env: baseEnv,
+    encoding: "utf8",
+    timeout: 3000
+  });
+  assert.notEqual(placeholder.status, 0);
+  assert.match(placeholder.stderr, /unique production secret/);
+
+  const wildcard = spawnSync(process.execPath, [serverPath], {
+    cwd: path.join(__dirname, ".."),
+    env: { ...baseEnv, ADMIN_PASSWORD: "a-unique-production-secret-long-enough", ALLOWED_ORIGINS: "https://*.example.com" },
+    encoding: "utf8",
+    timeout: 3000
+  });
+  assert.notEqual(wildcard.status, 0);
+  assert.match(wildcard.stderr, /exact origins/);
 });
 
 before(startServer);
