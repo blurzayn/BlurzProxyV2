@@ -366,11 +366,13 @@ test("status, liveness, and readiness endpoints return healthy payloads", async 
   assert.equal(statusResponse.status, 401);
   const authenticatedStatus = await authenticatedFetch(`${baseUrl}/api/status`);
   assert.equal(authenticatedStatus.status, 200);
-  assert.deepEqual(await authenticatedStatus.json(), {
-    name: "BlurzProxy",
-    status: "online",
-    version: "1.0.0"
-  });
+  const status = await authenticatedStatus.json();
+  assert.equal(status.name, "BlurzProxy");
+  assert.equal(status.status, "online");
+  assert.equal(status.version, "1.0.0");
+  assert.equal(typeof status.uptimeSeconds, "number");
+  assert.equal(typeof status.memoryBytes.rss, "number");
+  assert.equal(typeof status.memoryBytes.heapUsed, "number");
   assert.equal(statusResponse.headers.has("x-powered-by"), false);
 
   assert.equal(healthResponse.status, 200);
