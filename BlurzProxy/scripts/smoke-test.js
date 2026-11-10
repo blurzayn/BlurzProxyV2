@@ -4,6 +4,7 @@ const { once } = require("node:events");
 const net = require("node:net");
 const path = require("node:path");
 const { after, before, test } = require("node:test");
+const { configureWispNetworkPolicy } = require("../server/network-policy");
 
 const serverPath = path.join(__dirname, "..", "server", "index.js");
 let server;
@@ -69,6 +70,23 @@ async function authenticatedFetch(url, options = {}) {
     headers: { ...(options.headers || {}), cookie }
   });
 }
+
+test("Wisp transport blocks private infrastructure and non-web services", () => {
+  const wisp = { options: {} };
+  const options = configureWispNetworkPolicy(wisp);
+
+  assert.equal(options.allow_private_ips, false);
+  assert.equal(options.allow_loopback_ips, false);
+  assert.equal(options.allow_direct_ip, false);
+  assert.equal(options.allow_udp_streams, false);
+  assert.equal(options.allow_tcp_streams, true);
+  assert.deepEqual(options.port_whitelist, [80, 443]);
+  assert.equal(options.stream_limit_per_host, 16);
+  assert.equal(options.stream_limit_total, 64);
+  assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("localhost")));
+  assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("metadata.google.internal")));
+  assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("service.internal")));
+});
 
 before(startServer);
 
