@@ -1,0 +1,58 @@
+# BlurzProxyV2 Deployment Readiness Status
+
+This checklist tracks the requirements in the deployment plan. It is intentionally conservative: a code change is not considered deployment-ready until its checks pass and the hosting environment is verified.
+
+## P0 — Critical
+
+- [x] Require a session before serving the application and protected API routes.
+- [x] Require a valid session and exact approved origin for the `/wisp/` WebSocket upgrade.
+- [x] Restrict CORS to explicitly configured exact origins.
+- [x] Add login and API rate limits.
+- [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
+- [~] Keep the application backend off the public edge. Compose exposes the app only to its private backend network; the actual host firewall and network configuration still need verification.
+- [x] Restrict Wisp destinations to public IPs and TCP ports 80/443; reject direct-IP, private, loopback, and UDP access.
+- [~] Keep production secrets out of source control, validate required startup settings, and use a template-only `.env.example`. Historical Git contents and any required credential rotation must be checked separately.
+
+## P1 — High
+
+- [x] Pin direct npm dependencies and commit the lockfile.
+- [x] Add a full dependency audit to CI, including a weekly scheduled run.
+- [~] Keep the current Scramjet/transport generation pinned. A deprecated dependency remains in the legacy browser stack; a major-generation migration needs a separate compatibility and regression review.
+- [x] Keep Express 5 and Node 22 compatibility under CI.
+- [x] Add HTTP security headers and production-safe error responses.
+- [x] Add structured server events, failed-login/rate-limit events, and authenticated uptime/memory metrics.
+- [x] Make readiness fail when required packages or the restricted Wisp transport configuration are unavailable.
+- [x] Close upgraded WebSocket sockets during graceful shutdown.
+- [x] Validate request bodies and cap JSON/form bodies at 1 MB.
+- [x] Run tests for authentication, unauthorized API access, WebSocket origin/session enforcement, malformed/oversized requests, readiness failure, HTTP headers, and shutdown/restart.
+- [x] Run the app container as the unprivileged Node user.
+- [x] Add Compose resource limits and a readiness-based container health check.
+- [x] Keep the app service on the private Compose backend network; Caddy is the public-facing reverse proxy.
+- [x] Validate Compose configuration and build the production Docker image in CI.
+
+## P2 — Medium
+
+- [x] Add CodeQL JavaScript/TypeScript analysis on pushes, pull requests, and a weekly schedule.
+- [x] Add structured logs and authenticated runtime metrics.
+- [ ] Configure operational alerts and an external uptime/memory monitoring destination after the hosting target is selected.
+- [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. This repository setting needs owner/admin access.
+- [ ] Configure production deployment behind a manual approval gate after the hosting target is selected.
+- [ ] Document backup, restore, and rollback procedures for the selected host, then test a restore.
+
+## Accessibility and interface review
+
+- [x] Run axe WCAG 2.1 AA checks on the homepage, settings, and every selectable theme.
+- [x] Test keyboard access and visible focus for settings/theme controls.
+- [x] Test mobile overflow and touch-target sizing at small viewports.
+- [x] Keep browser action feedback exposed through accessible status elements.
+
+## Production release blockers
+
+1. Select the hosting target and verify its ingress/firewall rules. The plan lists Codespaces, VPS, Docker hosting, private home server, or another target.
+2. Confirm who is allowed to use the application: one owner, a small approved group, or organization members. The current app uses one shared admin password, not individual accounts.
+3. Verify that the deployed backend port is unreachable from public networks and that HTTPS/WSS is terminated by the approved reverse proxy.
+4. Configure production secrets in the host's secret manager and rotate any credential that may have been committed previously.
+5. Enable required branch protection checks and a manual production approval gate.
+6. Complete monitoring, backup/restore, and rollback setup and test it.
+
+**Release rule:** keep deployment private and controlled. Do not expose the backend directly or proceed to a public release until the critical security, network, and automated-test phases are verified in the actual hosting environment.
