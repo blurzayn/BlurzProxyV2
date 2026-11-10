@@ -214,8 +214,9 @@ app.use(express.static(path.join(__dirname, "../public"), {
 
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
-  const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500
-    ? error.status : 500;
+  const status = error.message === "Origin not allowed." ? 403
+    : Number.isInteger(error.status) && error.status >= 400 && error.status < 500
+      ? error.status : 500;
   if (status >= 500) console.error("Internal HTTP request error.");
   const message = status === 413 ? "Request body exceeds the 1 MB limit."
     : status === 400 ? "Invalid request body." : "Request failed.";
