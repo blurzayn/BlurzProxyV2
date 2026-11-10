@@ -28,7 +28,7 @@ async function startServer() {
   baseUrl = `http://127.0.0.1:${port}`;
   server = spawn(process.execPath, [serverPath], {
     cwd: path.join(__dirname, ".."),
-    env: { ...process.env, HOST: "127.0.0.1", PORT: String(port) },
+    env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), ADMIN_PASSWORD: "test-only-password-12345", ALLOWED_ORIGINS: baseUrl, COOKIE_SECURE: "false" },
     stdio: ["ignore", "pipe", "pipe"]
   });
   server.stdout.on("data", (chunk) => {
@@ -43,7 +43,7 @@ async function startServer() {
       throw new Error(`Server exited during startup.\n${serverOutput}`);
     }
     try {
-      const response = await fetch(`${baseUrl}/api/status`, {
+      const response = await fetch(`${baseUrl}/healthz`, {
         cache: "no-store",
         signal: AbortSignal.timeout(1000)
       });
@@ -53,6 +53,21 @@ async function startServer() {
     }
   }
   throw new Error(`Server did not become ready.\n${serverOutput}`);
+}
+
+async function authenticatedFetch(url, options = {}) {
+  const login = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: baseUrl },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(login.status, 200);
+  const cookie = login.headers.get("set-cookie")?.split(";")[0];
+  assert.ok(cookie, "login should issue a session cookie");
+  return fetch(url, {
+    ...options,
+    headers: { ...(options.headers || {}), cookie }
+  });
 }
 
 before(startServer);
@@ -78,8 +93,10 @@ test("status, liveness, and readiness endpoints return healthy payloads", async 
     fetch(`${baseUrl}/readyz`)
   ]);
 
-  assert.equal(statusResponse.status, 200);
-  assert.deepEqual(await statusResponse.json(), {
+  assert.equal(statusResponse.status, 401);
+  const authenticatedStatus = await authenticatedFetch(`${baseUrl}/api/status`);
+  assert.equal(authenticatedStatus.status, 200);
+  assert.deepEqual(await authenticatedStatus.json(), {
     name: "BlurzProxy",
     status: "online",
     version: "1.0.0"
@@ -102,7 +119,7 @@ test("status, liveness, and readiness endpoints return healthy payloads", async 
 });
 
 test("engine status lists required browser dependencies", async () => {
-  const response = await fetch(`${baseUrl}/api/engines`);
+  const response = await authenticatedFetch(`${baseUrl}/api/engines`);
   assert.equal(response.status, 200);
   const { components } = await response.json();
   assert.ok(Array.isArray(components));
@@ -112,10 +129,10 @@ test("engine status lists required browser dependencies", async () => {
 
 test("homepage and browser assets are served with the new browser actions", async () => {
   const [homeResponse, appResponse, cssResponse, workerResponse] = await Promise.all([
-    fetch(`${baseUrl}/`),
-    fetch(`${baseUrl}/js/app.js`),
-    fetch(`${baseUrl}/css/style.css`),
-    fetch(`${baseUrl}/sw.js`)
+    authenticatedFetch(`${baseUrl}/`),
+    authenticatedFetch(`${baseUrl}/js/app.js`),
+    authenticatedFetch(`${baseUrl}/css/style.css`),
+    authenticatedFetch(`${baseUrl}/sw.js`)
   ]);
   assert.equal(homeResponse.status, 200);
   assert.equal(appResponse.status, 200);
@@ -145,7 +162,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
 });
 
 test("malformed and oversized JSON requests receive bounded error responses", async () => {
-  const malformedResponse = await fetch(`${baseUrl}/api/status`, {
+  const malformedResponse = await authenticatedFetch(`${baseUrl}/api/status`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: "{invalid"
@@ -153,7 +170,7 @@ test("malformed and oversized JSON requests receive bounded error responses", as
   assert.equal(malformedResponse.status, 400);
   assert.deepEqual(await malformedResponse.json(), { error: "Invalid request body." });
 
-  const oversizedResponse = await fetch(`${baseUrl}/api/status`, {
+  const oversizedResponse = await authenticatedFetch(`${baseUrl}/api/status`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ data: "x".repeat(1024 * 1024) })
