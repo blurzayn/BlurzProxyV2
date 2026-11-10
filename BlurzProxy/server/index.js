@@ -5,6 +5,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const { server: wisp } = require("@mercuryworkshop/wisp-js/server");
 const { configureWispNetworkPolicy } = require("./network-policy");
+const { evaluateReadiness } = require("./readiness");
 require("dotenv").config();
 
 const app = express();
@@ -202,7 +203,7 @@ app.get("/healthz", (req, res) => res.json({
   name: "BlurzProxy", status: "ok", uptime: process.uptime()
 }));
 app.get("/readyz", (req, res) => {
-  const ready = isApplicationReady();
+  const ready = evaluateReadiness({ packages, checkPackage, wisp });
   res.status(ready ? 200 : 503).json({
     name: "BlurzProxy", ready, status: ready ? "ready" : "not_ready"
   });
@@ -237,17 +238,6 @@ function checkPackage(name) {
   } catch {
     return { name, installed: false, version: null };
   }
-}
-function isApplicationReady() {
-  const dependenciesReady = packages.every((name) => checkPackage(name).installed);
-  const policy = wisp.options;
-  const transportReady = typeof wisp.routeRequest === "function" &&
-    policy.allow_private_ips === false && policy.allow_loopback_ips === false &&
-    policy.allow_direct_ip === false && policy.allow_udp_streams === false &&
-    Array.isArray(policy.port_whitelist) &&
-    policy.port_whitelist.length === 2 &&
-    policy.port_whitelist.includes(80) && policy.port_whitelist.includes(443);
-  return dependenciesReady && transportReady;
 }
 app.get("/api/status", (req, res) => res.json({
   name: "BlurzProxy", status: "online", version: "1.0.0"
