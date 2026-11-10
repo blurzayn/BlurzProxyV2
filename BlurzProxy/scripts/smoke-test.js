@@ -110,7 +110,7 @@ test("authentication rejects bad credentials and manages session cookies", async
   const setCookie = login.headers.get("set-cookie");
   assert.match(setCookie, /HttpOnly/i);
   assert.match(setCookie, /SameSite=Strict/i);
-  assert.match(setCookie, /Path=\\//i);
+  assert.match(setCookie, /Path=\//i);
   const cookie = setCookie.split(";")[0];
 
   const session = await fetch(`${baseUrl}/auth/session`, { headers: { cookie } });
@@ -187,7 +187,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(home, /id="copy-address"/);
   assert.match(
     home,
-    /<select id="theme-select">[\s\S]*?value="red"[\s\S]*?value="orange"[\s\S]*?value="yellow"[\s\S]*?value="green"[\s\S]*?value="blue"[\s\S]*?value="purple" selected/
+    /<select id="theme-select">[\s\S]*?value="purple" selected[\s\S]*?value="blue"[\s\S]*?value="red"[\s\S]*?value="orange"[\s\S]*?value="yellow"[\s\S]*?value="green"/
   );
   assert.match(home, /BlurzProxy always opens on the homepage/);
   assert.match(home, /id="restore-open-tabs"/);
