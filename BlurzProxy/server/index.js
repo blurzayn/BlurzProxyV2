@@ -69,6 +69,17 @@ configureWispNetworkPolicy(wisp);
 const sessions = new Map();
 const buckets = new Map();
 const websocketSockets = new Set();
+const sessionSockets = new Map();
+
+function closeSessionSockets(token) {
+  const sockets = sessionSockets.get(token);
+  if (!sockets) return;
+  sessionSockets.delete(token);
+  for (const socket of sockets) {
+    websocketSockets.delete(socket);
+    socket.destroy();
+  }
+}
 
 function logEvent(level, event, details = {}) {
   const record = { timestamp: new Date().toISOString(), level, event, ...details };
@@ -94,6 +105,7 @@ function getSession(req) {
   const now = Date.now();
   if (session.expiresAt <= now || session.absoluteExpiresAt <= now) {
     sessions.delete(token);
+    closeSessionSockets(token);
     return null;
   }
   session.expiresAt = Math.min(now + SESSION_TTL, session.absoluteExpiresAt);
@@ -198,7 +210,10 @@ app.get("/auth/session", (req, res) => {
 });
 app.post("/auth/logout", (req, res) => {
   const current = getSession(req);
-  if (current) sessions.delete(current.token);
+  if (current) {
+    sessions.delete(current.token);
+    closeSessionSockets(current.token);
+  }
   clearCookie(res);
   res.json({ authenticated: false });
 });
@@ -306,13 +321,31 @@ server.on("upgrade", (request, socket, head) => {
     return;
   }
   websocketSockets.add(socket);
-  socket.once("close", () => websocketSockets.delete(socket));
+  let sockets = sessionSockets.get(current.token);
+  if (!sockets) {
+    sockets = new Set();
+    sessionSockets.set(current.token, sockets);
+  }
+  sockets.add(socket);
+  socket.once("close", () => {
+    websocketSockets.delete(socket);
+    const activeSockets = sessionSockets.get(current.token);
+    if (activeSockets) {
+      activeSockets.delete(socket);
+      if (!activeSockets.size) sessionSockets.delete(current.token);
+    }
+  });
   wisp.routeRequest(request, socket, head);
 });
 
 const cleanup = setInterval(() => {
   const now = Date.now();
-  for (const [token, session] of sessions) if (session.expiresAt <= now) sessions.delete(token);
+  for (const [token, session] of sessions) {
+    if (session.expiresAt <= now || session.absoluteExpiresAt <= now) {
+      sessions.delete(token);
+      closeSessionSockets(token);
+    }
+  }
   for (const [key, bucket] of buckets) if (bucket.resetAt <= now) buckets.delete(key);
 }, 60000);
 cleanup.unref();
