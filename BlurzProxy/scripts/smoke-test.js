@@ -5,6 +5,7 @@ const net = require("node:net");
 const path = require("node:path");
 const { after, before, test } = require("node:test");
 const { configureWispNetworkPolicy } = require("../server/network-policy");
+const { evaluateReadiness } = require("../server/readiness");
 
 const serverPath = path.join(__dirname, "..", "server", "index.js");
 let server;
@@ -70,6 +71,36 @@ async function authenticatedFetch(url, options = {}) {
     headers: { ...(options.headers || {}), cookie }
   });
 }
+
+
+test("readiness fails when a required dependency or restricted transport is unavailable", () => {
+  const packages = ["required-package"];
+  const checkPackage = () => ({ installed: true });
+  const wisp = {
+    routeRequest() {},
+    options: {
+      allow_private_ips: false,
+      allow_loopback_ips: false,
+      allow_direct_ip: false,
+      allow_udp_streams: false,
+      port_whitelist: [80, 443]
+    }
+  };
+
+  assert.equal(evaluateReadiness({ packages, checkPackage, wisp }), true);
+  assert.equal(evaluateReadiness({
+    packages, checkPackage: () => ({ installed: false }), wisp
+  }), false);
+  assert.equal(evaluateReadiness({
+    packages, checkPackage, wisp: { options: wisp.options }
+  }), false);
+  assert.equal(evaluateReadiness({
+    packages, checkPackage, wisp: {
+      ...wisp,
+      options: { ...wisp.options, allow_private_ips: true }
+    }
+  }), false);
+});
 
 test("Wisp transport blocks private infrastructure and non-web services", () => {
   const wisp = { options: {} };
