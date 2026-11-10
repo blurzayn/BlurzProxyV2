@@ -329,6 +329,31 @@ test("logging out immediately closes WebSockets authenticated by that session", 
   ]);
 });
 
+test("Wisp limits concurrent WebSockets per authenticated session", async () => {
+  const login = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: baseUrl },
+    body: JSON.stringify({ password: "test-only-password-12345" })
+  });
+  assert.equal(login.status, 200);
+  const cookie = login.headers.get("set-cookie")?.split(";")[0];
+  assert.ok(cookie);
+
+  const sockets = [];
+  try {
+    for (let count = 0; count < 4; count += 1) {
+      const upgraded = await websocketUpgrade(baseUrl, cookie);
+      assert.match(upgraded.response, /^HTTP\\/1\\.1 101/);
+      sockets.push(upgraded.socket);
+    }
+    const limited = await websocketUpgrade(baseUrl, cookie);
+    assert.match(limited.response, /^HTTP\\/1\\.1 429/);
+    limited.socket.destroy();
+  } finally {
+    for (const socket of sockets) socket.destroy();
+  }
+});
+
 test("server shuts down cleanly and can restart on the same port", async () => {
   const port = await getFreePort();
   const first = await launchIsolatedServer(port);
