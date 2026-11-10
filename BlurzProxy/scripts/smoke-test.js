@@ -239,6 +239,15 @@ test("production startup rejects placeholder secrets and wildcard origins", () =
   });
   assert.notEqual(wildcard.status, 0);
   assert.match(wildcard.stderr, /exact origins/);
+
+  const insecureOrigin = spawnSync(process.execPath, [serverPath], {
+    cwd: path.join(__dirname, ".."),
+    env: { ...baseEnv, ADMIN_PASSWORD: "a-unique-production-secret-long-enough", ALLOWED_ORIGINS: "http://proxy.example.com" },
+    encoding: "utf8",
+    timeout: 3000
+  });
+  assert.notEqual(insecureOrigin.status, 0);
+  assert.match(insecureOrigin.stderr, /exact origins/);
 });
 
 before(startServer);
