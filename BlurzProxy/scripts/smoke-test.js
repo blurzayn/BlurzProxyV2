@@ -220,6 +220,10 @@ test("Wisp transport blocks private infrastructure and non-web services", () => 
   assert.deepEqual(options.port_whitelist, [80, 443]);
   assert.equal(options.stream_limit_per_host, 16);
   assert.equal(options.stream_limit_total, 64);
+  assert.equal(options.dns_ttl, 30);
+  assert.equal(options.dns_cache_size, 1024);
+  assert.equal(options.parse_real_ip, false);
+  assert.deepEqual(options.parse_real_ip_from, []);
   assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("localhost")));
   assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("metadata.google.internal")));
   assert.ok(options.hostname_blacklist.some((pattern) => pattern.test("service.internal")));
@@ -340,6 +344,14 @@ test("server shuts down cleanly and can restart on the same port", async () => {
     await stopIsolatedServer(second);
   }
   assert.equal(second.child.exitCode, 0);
+});
+
+test("CORS rejects non-exact Origin values", async () => {
+  const response = await fetch(`${baseUrl}/api/status`, {
+    headers: { origin: `${baseUrl}/` }
+  });
+  assert.equal(response.status, 403);
+  assert.equal(response.headers.has("access-control-allow-origin"), false);
 });
 
 test("state-changing requests reject missing and untrusted origins", async () => {
