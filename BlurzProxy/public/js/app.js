@@ -960,10 +960,6 @@ try {
   if (searchEngines.has(savedSearchEngine)) {
     searchEngineSelect.value = savedSearchEngine;
   }
-  const savedStartupPage = localStorage.getItem("blurz-startup-page");
-  if (startupPages.has(savedStartupPage)) {
-    startupPageSelect.value = savedStartupPage;
-  }
   const savedLinkBehavior = localStorage.getItem("blurz-link-behavior");
   if (linkBehaviors.has(savedLinkBehavior)) {
     linkBehaviorSelect.value = savedLinkBehavior;
