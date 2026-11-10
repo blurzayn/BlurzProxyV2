@@ -4,19 +4,23 @@ set -eu
 cd "$(dirname "$0")/../BlurzProxy"
 
 # Keep the Codespaces forwarded URL on the exact-origin allowlist.
-if [ "${CODESPACES:-}" = "true" ]; then
+if [ -n "${CODESPACE_NAME:-}" ]; then
+  export HOST="${HOST:-0.0.0.0}"
   if [ -z "${ADMIN_PASSWORD:-}" ]; then
     echo "Set ADMIN_PASSWORD as a GitHub Codespaces secret before starting BlurzProxy."
     exit 1
   fi
 
+  if [ -z "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
+    echo "Could not determine the Codespaces forwarded origin. Set GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN or ALLOWED_ORIGINS explicitly."
+    exit 1
+  fi
+
+  codespaces_origin="https://${CODESPACE_NAME}-3000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
   if [ -z "${ALLOWED_ORIGINS:-}" ]; then
-    if [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
-      export ALLOWED_ORIGINS="https://${CODESPACE_NAME}-3000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
-    else
-      echo "Could not determine the Codespaces forwarded origin. Set ALLOWED_ORIGINS explicitly."
-      exit 1
-    fi
+    export ALLOWED_ORIGINS="$codespaces_origin"
+  elif [[ ",${ALLOWED_ORIGINS//[[:space:]]/}," != *",${codespaces_origin},"* ]]; then
+    export ALLOWED_ORIGINS="${ALLOWED_ORIGINS},${codespaces_origin}"
   fi
 fi
 
