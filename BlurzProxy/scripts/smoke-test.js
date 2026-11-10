@@ -197,8 +197,12 @@ test("status, liveness, and readiness endpoints return healthy payloads", async 
   assert.deepEqual(await readyResponse.json(), {
     name: "BlurzProxy",
     ready: true,
-    status: "online"
+    status: "ready"
   });
+  assert.equal(healthResponse.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(healthResponse.headers.get("referrer-policy"), "strict-origin-when-cross-origin");
+  assert.equal(healthResponse.headers.get("x-frame-options"), "SAMEORIGIN");
+  assert.equal(healthResponse.headers.get("permissions-policy"), "camera=(), microphone=(), geolocation=()");
 });
 
 test("engine status lists required browser dependencies", async () => {
