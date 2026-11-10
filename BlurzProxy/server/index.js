@@ -87,7 +87,8 @@ function logEvent(level, event, details = {}) {
   const record = { timestamp: new Date().toISOString(), level, event, ...details };
   console[level](JSON.stringify(record));
 }
-const passwordDigest = crypto.createHash("sha256").update(ADMIN_PASSWORD, "utf8").digest();
+const passwordSalt = crypto.randomBytes(16);
+const passwordDigest = crypto.scryptSync(ADMIN_PASSWORD, passwordSalt, 64);
 
 function cookies(header) {
   const result = Object.create(null);
@@ -193,14 +194,19 @@ app.get("/login", (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.type("html").send(loginPage);
 });
-app.post("/auth/login", loginLimiter, (req, res) => {
+app.post("/auth/login", loginLimiter, async (req, res) => {
   const origin = req.get("origin");
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
     logEvent("warn", "authentication_failed", { reason: "origin_not_allowed" });
     return res.status(403).json({ error: "Origin not allowed." });
   }
   const supplied = typeof req.body?.password === "string" ? req.body.password : "";
-  const digest = crypto.createHash("sha256").update(supplied, "utf8").digest();
+  const digest = await new Promise((resolve, reject) => {
+    crypto.scrypt(supplied, passwordSalt, 64, (error, derivedKey) => {
+      if (error) return reject(error);
+      resolve(derivedKey);
+    });
+  });
   if (!crypto.timingSafeEqual(passwordDigest, digest)) {
     logEvent("warn", "authentication_failed", { reason: "invalid_credentials" });
     return res.status(401).json({ error: "Invalid credentials." });
