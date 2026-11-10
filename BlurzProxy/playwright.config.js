@@ -15,7 +15,10 @@ module.exports = defineConfig({
     url: "http://127.0.0.1:3467/healthz",
     env: {
       HOST: "127.0.0.1",
-      PORT: "3467"
+      PORT: "3467",
+      ADMIN_PASSWORD: "test-only-password-12345",
+      ALLOWED_ORIGINS: "http://127.0.0.1:3467",
+      COOKIE_SECURE: "false"
     },
     reuseExistingServer: false,
     timeout: 30000
