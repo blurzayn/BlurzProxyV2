@@ -70,6 +70,8 @@ const sessions = new Map();
 const buckets = new Map();
 const websocketSockets = new Set();
 const sessionSockets = new Map();
+const MAX_WEBSOCKETS_PER_SESSION = 4;
+const MAX_WEBSOCKETS_TOTAL = 64;
 
 function closeSessionSockets(token) {
   const sockets = sessionSockets.get(token);
@@ -330,8 +332,14 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
     return;
   }
-  websocketSockets.add(socket);
   let sockets = sessionSockets.get(current.token);
+  if (websocketSockets.size >= MAX_WEBSOCKETS_TOTAL ||
+      (sockets && sockets.size >= MAX_WEBSOCKETS_PER_SESSION)) {
+    socket.write("HTTP/1.1 429 Too Many Requests\\r\\nConnection: close\\r\\nRetry-After: 60\\r\\n\\r\\n");
+    socket.destroy();
+    return;
+  }
+  websocketSockets.add(socket);
   if (!sockets) {
     sockets = new Set();
     sessionSockets.set(current.token, sockets);
