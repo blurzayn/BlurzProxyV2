@@ -17,13 +17,28 @@ const LOGIN_MAX = 10;
 const API_WINDOW = 60 * 1000;
 const API_MAX = 120;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
-const ALLOWED_ORIGINS = new Set((process.env.ALLOWED_ORIGINS || "")
-  .split(",").map((value) => value.trim().replace(/\/$/, "")).filter(Boolean));
+const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",").map((value) => value.trim()).filter(Boolean);
+const ALLOWED_ORIGINS = new Set(configuredOrigins.map((value) => {
+  let parsed;
+  try { parsed = new URL(value); }
+  catch { throw new Error("ALLOWED_ORIGINS must contain valid exact origins."); }
+  if (!["http:", "https:"].includes(parsed.protocol) || parsed.origin !== value.replace(/\/$/, "") ||
+      parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash ||
+      value.includes("*")) {
+    throw new Error("ALLOWED_ORIGINS must contain valid exact origins without paths or wildcards.");
+  }
+  return parsed.origin;
+}));
 const COOKIE_SECURE = process.env.COOKIE_SECURE
   ? process.env.COOKIE_SECURE === "true" : process.env.NODE_ENV === "production";
 
 if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new RangeError("Invalid PORT.");
 if (ADMIN_PASSWORD.length < 16) throw new Error("ADMIN_PASSWORD must be at least 16 characters.");
+if (process.env.NODE_ENV === "production" &&
+    /^(replace-with-|change-me|changeme|password$|test-only)/i.test(ADMIN_PASSWORD)) {
+  throw new Error("ADMIN_PASSWORD must be replaced with a unique production secret.");
+}
 if (!ALLOWED_ORIGINS.size) throw new Error("ALLOWED_ORIGINS must contain exact trusted origins.");
 if (process.env.COOKIE_SECURE && !["true", "false"].includes(process.env.COOKIE_SECURE)) {
   throw new Error("COOKIE_SECURE must be true or false.");
