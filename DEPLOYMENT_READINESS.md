@@ -38,7 +38,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add CodeQL JavaScript/TypeScript analysis on pushes, pull requests, and a weekly schedule.
 - [x] Add structured logs and authenticated runtime metrics.
 - [ ] Configure operational alerts and an external uptime/memory monitoring destination after the hosting target is selected.
-- [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. This repository setting needs owner/admin access.
+- [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. GitHub currently reports `main` and `security/auth-gate` as unprotected, and no repository rulesets are configured. This repository setting needs owner/admin access.
 - [ ] Configure production deployment behind a manual approval gate after the hosting target is selected.
 - [ ] Document backup, restore, and rollback procedures for the selected host, then test a restore.
 
