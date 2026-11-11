@@ -532,18 +532,21 @@ test("homepage and browser assets are served with the new browser actions", asyn
     authenticatedFetch(`${baseUrl}/`),
     authenticatedFetch(`${baseUrl}/js/app.js`),
     authenticatedFetch(`${baseUrl}/css/style.css`),
-    authenticatedFetch(`${baseUrl}/sw.js`)
+    authenticatedFetch(`${baseUrl}/sw.js`),
+    authenticatedFetch(`${baseUrl}/scramjet/sw.js`)
   ]);
   assert.equal(homeResponse.status, 200);
   assert.equal(appResponse.status, 200);
   assert.equal(cssResponse.status, 200);
   assert.equal(workerResponse.status, 200);
+  assert.equal(scramjetWorkerResponse.status, 200);
 
-  const [home, app, css, worker] = await Promise.all([
+  const [home, app, css, worker, scramjetWorker] = await Promise.all([
     homeResponse.text(),
     appResponse.text(),
     cssResponse.text(),
-    workerResponse.text()
+    workerResponse.text(),
+    scramjetWorkerResponse.text()
   ]);
   assert.doesNotMatch(home, /id="(?:duplicate-tab|reopen-tab)"/);
   assert.match(home, /id="copy-address"/);
@@ -564,6 +567,9 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(home, /id="restore-open-tabs"/);
   assert.match(worker, /blurz-app-v11/);
   assert.match(worker, /response\.status === 200/);
+  assert.match(scramjetWorker, /function rewritePokiImageRequest\(request\)/);
+  assert.match(scramjetWorker, /img\\.poki-cdn\\.com/);
+  assert.match(scramjetWorker, /encodeURIComponent\(destination\.href\)/);
   assert.match(app, /async function reopenClosedTab\(\)/);
   assert.match(app, /keys: "Ctrl\+Shift\+T"/);
   assert.match(app, /async function copyCurrentAddress\(\)/);
