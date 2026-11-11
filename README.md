@@ -2,6 +2,20 @@
 
 A browser-based web proxy powered by Scramjet.
 
+## Self-hosting: everyone runs their own instance
+
+BlurzProxy is designed to be cloned and run independently. You do not need access to the original developer's Codespace or server, and the project does not send every user's browsing through one centrally hosted BlurzProxy server. Each person or organization runs and maintains their own copy, chooses its own access password, and is responsible for its own hosting and network.
+
+For a private instance on your own computer, follow the local setup below. For an instance other people can reach over the internet, use the Docker + Caddy deployment below on a server you control. Do not expose the Node app's port 3000 directly to the public internet.
+
+### Clone the project
+
+```bash
+git clone https://github.com/blurzayn/BlurzProxyV2.git
+cd BlurzProxyV2/BlurzProxy
+```
+
+
 ## Configure access before starting
 
 The server fails closed unless an administrator password and at least one exact trusted browser origin are configured. Create `BlurzProxy/.env` from this template and never commit real secrets:
