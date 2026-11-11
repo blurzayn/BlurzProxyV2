@@ -554,7 +554,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(home, /id="poki-diagnostic-output"/);
   assert.match(app, /function runPokiDiagnostics\(\)/);
   assert.match(app, /tab\.iframe\.contentDocument/);
-  assert.match(app, /Images: \\\$\{images\.length\} total/);
+  assert.match(app, /Images: \$\{images\.length\} total/);
   assert.match(app, /Actual document URL/);
   assert.match(app, /Navigation response/);
   assert.match(app, /Resources with HTTP errors/);
