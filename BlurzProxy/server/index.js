@@ -19,8 +19,9 @@ const API_WINDOW = 60 * 1000;
 const API_MAX = 120;
 // Authentication may be skipped only for local development. Codespaces and every
 // other environment keep the authentication gate enabled.
-const AUTH_REQUIRED = process.env.NODE_ENV !== "development" ||
-  process.env.CODESPACES === "true";
+const IS_CODESPACES = process.env.CODESPACES === "true" ||
+  Boolean(process.env.CODESPACE_NAME);
+const AUTH_REQUIRED = process.env.NODE_ENV !== "development" || IS_CODESPACES;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",").map((value) => value.trim()).filter(Boolean);
