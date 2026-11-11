@@ -12,7 +12,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
 - [~] Keep the Codespaces forwarded port private. The devcontainer now declares port 3000 private with HTTPS forwarding; verify the live Ports panel still shows Private. Codespaces is for private development/testing, not always-on production hosting.
 - [~] Wisp transport restrictions now include a custom DNS resolver that examines the complete system DNS answer set and rejects the hostname if any answer is not globally routable. This addresses mixed public/private answers before Wisp's single-address cache/socket flow. Direct-IP, private/loopback, UDP, and non-web-port restrictions remain enabled; DNS cache retention is 30 seconds / 1,024 entries. Unit tests cover mixed answers, IPv4-mapped IPv6, and special-use address classes. Still required before production: execute Wisp-protocol integration tests against actual denied connection attempts, verify DNS changes across cache expiry, and perform host-level egress controls.
-- [~] Keep production secrets out of source control, validate required startup settings, and use a template-only `.env.example`. The repository is currently public. A full-history Gitleaks workflow has been added; its first run is pending. Any detected credential must be revoked/rotated before considering history cleanup. GitHub secret-scanning alert access was not available during this review.
+- [~] Keep production secrets out of source control, validate required startup settings, and use a template-only `.env.example`. The repository is public. The full-history Gitleaks workflow is configured and its required check passed on the reviewed `main` commit. Any newly detected credential must be revoked/rotated; removing it from a later commit does not revoke it.
 
 ## P1 — High
 
@@ -38,9 +38,9 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add structured logs and authenticated runtime metrics.
 - [ ] Configure operational alerts and an external uptime/memory monitoring destination after the hosting target is selected.
 - [x] Pin GitHub Actions to immutable commit SHAs and cancel superseded workflow runs.
-- [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. No repository rulesets were returned during this review; branch-protection settings could not be read with the available GitHub connection. Owner/admin access is required to verify and configure this.
-- [ ] Configure production deployment behind a manual approval gate after the hosting target is selected.
-- [ ] Document backup, restore, and rollback procedures for the selected host, then test a restore.
+- [x] Configure the active `Protect main` ruleset with pull requests, up-to-date branches, and five required CI/security checks: browser/security tests, npm audit, production container build/Compose validation, CodeQL, and full-history Gitleaks.
+- [ ] If automated deployment is introduced later, review and configure an appropriate deployment gate. This is not required to publish the source code or for independent users to self-host.
+- [x] Document generic backup, restore, and rollback procedures in `DEPLOYMENT_RUNBOOK.md`.\n- [ ] A restore and rollback have not been tested on a real operator-managed host; each operator must validate their own environment.
 
 ## Accessibility and interface review
 
@@ -49,14 +49,14 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Test mobile overflow and touch-target sizing at small viewports.
 - [x] Keep browser action feedback exposed through accessible status elements.
 
-## Production release blockers
+## Independent operator deployment considerations
 
-1. Codespaces selected for private development/testing. Verify port 3000 is Private in the live Ports panel; do not use a Public forwarded port. Select a separate always-on host before any production release.
+1. Codespaces is for private development/testing. Keep forwarded port 3000 Private. This does not block publishing the source repository; anyone running a permanent instance chooses and manages their own infrastructure.
 2. Confirm who is allowed to use the application: one owner, a small approved group, or organization members. The current app uses one shared admin password, not individual accounts.
 3. For Codespaces, verify GitHub private-port authentication and HTTPS forwarding, and keep the port Private. For a later production host, verify the backend port is unreachable publicly and HTTPS/WSS is terminated by the approved reverse proxy.
 4. Complete an SSRF/network-egress review of Wisp, including DNS rebinding, IPv4-mapped IPv6, redirects, and public-to-private resolution changes; add regression tests before treating outbound restrictions as a security boundary.
 5. Configure production secrets in the host's secret manager and rotate any credential that may have been committed previously.
-6. Enable required branch protection checks and a manual production approval gate.
+6. The `main` branch ruleset and required checks are configured. A manual production approval gate is intentionally not required for this solo-maintained source project.
 7. Complete monitoring, backup/restore, and rollback setup and test it.
 
-**Release rule:** keep deployment private and controlled. Do not expose the backend directly or proceed to a public release until the critical security, network, and automated-test phases are verified in the actual hosting environment.
+**Scope:** these are operational checks for anyone choosing to run an internet-reachable instance. They are not prerequisites for cloning, forking, contributing to, or publishing the open-source source code. Each operator must independently assess their deployment and must not expose the backend directly.
