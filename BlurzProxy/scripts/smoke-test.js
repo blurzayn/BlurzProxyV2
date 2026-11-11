@@ -551,7 +551,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(home, /id="poki-diagnostic-output"/);
   assert.match(app, /function runPokiDiagnostics\(\)/);
   assert.match(app, /tab\.iframe\.contentDocument/);
-  assert.match(app, /Images: \\${images.length} total/);
+  assert.match(app, /Images: \\\$\{images\.length\} total/);
   assert.match(
     home,
     /<select id="theme-select">[\s\S]*?value="purple" selected[\s\S]*?value="blue"[\s\S]*?value="red"[\s\S]*?value="orange"[\s\S]*?value="yellow"[\s\S]*?value="green"/
