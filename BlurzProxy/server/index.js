@@ -372,7 +372,7 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
     return;
   }
-  let sockets = sessionSockets.get(current.token);
+  let sockets = current ? sessionSockets.get(current.token) : null;
   if (websocketSockets.size >= MAX_WEBSOCKETS_TOTAL ||
       (sockets && sockets.size >= MAX_WEBSOCKETS_PER_SESSION)) {
     socket.write("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\nRetry-After: 60\r\n\r\n");
@@ -380,13 +380,16 @@ server.on("upgrade", (request, socket, head) => {
     return;
   }
   websocketSockets.add(socket);
-  if (!sockets) {
-    sockets = new Set();
-    sessionSockets.set(current.token, sockets);
+  if (current) {
+    if (!sockets) {
+      sockets = new Set();
+      sessionSockets.set(current.token, sockets);
+    }
+    sockets.add(socket);
   }
-  sockets.add(socket);
   socket.once("close", () => {
     websocketSockets.delete(socket);
+    if (!current) return;
     const activeSockets = sessionSockets.get(current.token);
     if (activeSockets) {
       activeSockets.delete(socket);
