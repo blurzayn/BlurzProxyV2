@@ -569,6 +569,9 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(worker, /response\.status === 200/);
   assert.match(scramjetWorker, /function rewritePokiImageRequest\(request\)/);
   assert.match(scramjetWorker, /img\.poki-cdn\.com/);
+  assert.match(scramjetWorker, /destination\.pathname\.match\(\/\^\\\\\/f=auto/);
+  assert.doesNotMatch(scramjetWorker, /request\.destination !== ["']image["']/);
+  assert.match(scramjetWorker, /new Proxy\(event/);
   assert.match(scramjetWorker, /encodeURIComponent\(destination\.href\)/);
   assert.match(app, /async function reopenClosedTab\(\)/);
   assert.match(app, /keys: "Ctrl\+Shift\+T"/);
