@@ -49,7 +49,8 @@ self.addEventListener("fetch", (event) => {
 
     try {
       const response = await fetch(request);
-      if (response.ok) {
+      // Cache only complete responses; Cache API rejects HTTP 206 partial responses.
+      if (response.status === 200) {
         await cache.put(request, response.clone());
       }
       return response;

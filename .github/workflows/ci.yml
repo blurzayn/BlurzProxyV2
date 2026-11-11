@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-audit:
+    name: npm dependency security audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+          cache-dependency-path: BlurzProxy/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: BlurzProxy
+        run: npm ci
+
+      - name: Audit all direct and transitive dependencies
+        working-directory: BlurzProxy
+        run: npm run audit
+
+  production-image:
+    name: Production container build and Compose validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Validate production Compose configuration
+        working-directory: BlurzProxy
+        env:
+          ADMIN_PASSWORD: ci-only-placeholder-password-not-for-deployment
+          DOMAIN: proxy.example.invalid
+        run: docker compose config --quiet
+
+      - name: Validate Caddy reverse-proxy configuration
+        working-directory: BlurzProxy
+        env:
+          DOMAIN: proxy.example.invalid
+        run: docker run --rm --env DOMAIN --volume "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+      - name: Build production container image
+        working-directory: BlurzProxy
+        run: docker build --tag blurzproxy:ci .
+
+  test:
+    name: Smoke, security, and browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+          cache-dependency-path: BlurzProxy/package-lock.json
+
+      - name: Install dependencies
+        working-directory: BlurzProxy
+        run: npm ci
+
+      # GitHub-hosted Ubuntu runners already include Playwright's required OS
+      # libraries. Avoid --with-deps here: it invokes apt and can stall when
+      # Ubuntu package mirrors have transient DNS/network failures.
+      - name: Install Chromium
+        working-directory: BlurzProxy
+        run: npx playwright install chromium
+
+      - name: Run smoke, security, and browser tests
+        working-directory: BlurzProxy
+        run: npm run check

@@ -151,6 +151,25 @@ function saveSetting(key, value) {
   }
 }
 
+function readStoredValue(key) {
+  try {
+    return localStorage.getItem(key) || "";
+  } catch (error) {
+    showSettingsMessage(`Could not read preference ${key}: ${error.message}`);
+    return "";
+  }
+}
+
+function readStoredJson(key, fallback) {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored === null ? fallback : JSON.parse(stored);
+  } catch (error) {
+    showSettingsMessage(`Could not read preference ${key}: ${error.message}`);
+    return fallback;
+  }
+}
+
 function setCustomAccent(color) {
   const root = document.documentElement;
   if (color) {
@@ -183,10 +202,12 @@ function saveOpenTabs() {
       pinned: tab.pinned,
       active: tab.id === activeTabId
     }))
-    .filter((tab) => !tab.url || /^https?:\/\//i.test(tab.url));
+    .filter((tab) => typeof tab.url === "string" && /^https?:\/\//i.test(tab.url));
+
+  // A blank/new-tab page must not erase the last useful restore snapshot.
+  if (!openUrls.length) return false;
   return saveSetting("blurz-open-tabs", JSON.stringify(openUrls));
 }
-
 function normalizeShortcutUrl(value) {
   const input = value.trim();
   if (!input) return null;
@@ -642,7 +663,7 @@ function setTabLoadState(tab, state, text = "") {
   tab.loadStatus.hidden = !text;
   if (tab.loading) {
     tab.loadTimeout = window.setTimeout(() => {
-      setTabLoadState(tab, "error", "Page load timed out. Try reloading.");
+      setTabLoadState(tab, "error", "This site did not finish loading. It may require browser features, a site security check, or access through its official website. BlurzProxy does not bypass site security checks.");
     }, 30000);
   }
 }
@@ -875,9 +896,10 @@ try {
   syncSiteLists();
 
   const savedTheme = readStoredValue("blurz-theme");
-  if (themes.has(savedTheme)) {
-    document.documentElement.dataset.theme = savedTheme;
-    themeSelect.value = savedTheme;
+  const activeTheme = themes.has(savedTheme) ? savedTheme : themeSelect.value;
+  if (themes.has(activeTheme)) {
+    document.documentElement.dataset.theme = activeTheme;
+    themeSelect.value = activeTheme;
   }
   const savedAccent = readStoredValue("blurz-custom-accent");
   if (/^#[0-9a-f]{6}$/i.test(savedAccent || "")) {
@@ -937,10 +959,6 @@ try {
   const savedSearchEngine = readStoredValue("blurz-search-engine");
   if (searchEngines.has(savedSearchEngine)) {
     searchEngineSelect.value = savedSearchEngine;
-  }
-  const savedStartupPage = localStorage.getItem("blurz-startup-page");
-  if (startupPages.has(savedStartupPage)) {
-    startupPageSelect.value = savedStartupPage;
   }
   const savedLinkBehavior = localStorage.getItem("blurz-link-behavior");
   if (linkBehaviors.has(savedLinkBehavior)) {
@@ -1182,7 +1200,7 @@ clearHistoryOnExitSetting.addEventListener("change", () => {
 
 window.addEventListener("beforeunload", () => {
   try {
-    saveOpenTabs();
+    if (tabs.some((tab) => tab.url)) saveOpenTabs();
   } catch (error) {
     console.error("Could not save open tabs before exit:", error);
   }
@@ -1190,7 +1208,7 @@ window.addEventListener("beforeunload", () => {
 
 window.addEventListener("pagehide", () => {
   try {
-    saveOpenTabs();
+    if (tabs.some((tab) => tab.url)) saveOpenTabs();
   } catch (error) {
     console.error("Could not save open tabs before page hide:", error);
   }
@@ -1769,6 +1787,7 @@ function exportSettings() {
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
 
 function getActiveTab() {
   return tabs.find((tab) => tab.id === activeTabId);

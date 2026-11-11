@@ -1,0 +1,8 @@
+{$DOMAIN} {
+  encode zstd gzip
+
+  @internal_health path /healthz /readyz
+  respond @internal_health 404
+
+  reverse_proxy app:3000
+}

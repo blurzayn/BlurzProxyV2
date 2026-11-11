@@ -1,6 +1,13 @@
 const { expect, test } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
 
+test.beforeEach(async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Access password").fill("test-only-password-12345");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(new RegExp("/$"));
+});
+
 test("opens on the homepage and leaves saved tabs unopened", async ({ page }) => {
   const unexpectedDestinations = [];
   page.on("request", (request) => {
@@ -8,13 +15,13 @@ test("opens on the homepage and leaves saved tabs unopened", async ({ page }) =>
       unexpectedDestinations.push(request.url());
     }
   });
-  await page.addInitScript(() => {
+  await page.goto("/");
+  await page.evaluate(() => {
     localStorage.setItem("blurz-open-tabs", JSON.stringify([
       { url: "https://example.com/previous-session", pinned: false, active: true }
     ]));
   });
-
-  await page.goto("/");
+  await page.reload();
 
   await expect(page.getByRole("heading", { name: "BLURZ" }).first()).toBeVisible();
   await expect(page.locator("#browser")).toBeHidden();
@@ -51,8 +58,9 @@ test("settings and theme controls are keyboard accessible", async ({ page }) => 
   await expect(theme).toBeFocused();
   await expect(theme).toHaveCSS("outline-style", "solid");
   await page.keyboard.press("Home");
-  await expect(theme).toHaveValue("red");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "red");
+  await page.keyboard.press("Enter");
+  await expect(theme).toHaveValue("purple");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "purple");
 });
 
 test("browser engine initializes without exposing an error state", async ({ page }) => {
@@ -66,13 +74,17 @@ test("browser engine initializes without exposing an error state", async ({ page
 
 test("manual previous-tab restore works without restoring automatically", async ({ page }) => {
   const savedUrl = "http://127.0.0.1:3467/healthz";
-  await page.addInitScript((url) => {
+  await page.goto("/");
+  await expect(page.locator("#browser-content .engine-status-text")).toHaveText(
+    "Browser engine ready",
+    { timeout: 20000 }
+  );
+  await page.evaluate((url) => {
     localStorage.setItem("blurz-open-tabs", JSON.stringify([
       { url, pinned: false, active: true }
     ]));
   }, savedUrl);
-
-  await page.goto("/");
+  await page.reload();
   await expect(page.locator("#browser")).toBeHidden();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   const restore = page.getByRole("button", { name: "Restore previous tabs" });
@@ -129,9 +141,9 @@ test("mobile homepage has no horizontal overflow and keeps address controls tapp
   const browserDimensions = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     document: document.documentElement.scrollWidth,
-    toolbarButtons: [...document.querySelectorAll(".browser-toolbar > button")].map((button) =>
-      button.getBoundingClientRect().height
-    )
+    toolbarButtons: [...document.querySelectorAll(".browser-toolbar > button")]
+      .filter((button) => button.getClientRects().length > 0)
+      .map((button) => button.getBoundingClientRect().height)
   }));
   expect(browserDimensions.document).toBeLessThanOrEqual(browserDimensions.viewport);
   expect(browserDimensions.toolbarButtons.every((height) => height >= 44)).toBe(true);

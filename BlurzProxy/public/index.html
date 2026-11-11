@@ -519,6 +519,7 @@
 
     #url-input {
       flex: 1;
+      min-height: 44px;
     }
 
     button {
@@ -530,14 +531,14 @@
       cursor: pointer;
       border: 0;
       border-radius: 8px;
-      background: var(--accent-strong);
+      background: color-mix(in srgb, var(--accent-strong) 35%, black);
       color: white;
       font: 600 14px/1.2 Inter, sans-serif;
       white-space: nowrap;
     }
 
     button:hover {
-      background: color-mix(in srgb, var(--accent-strong) 85%, black);
+      background: color-mix(in srgb, var(--accent-strong) 45%, black);
     }
 
     button:disabled {
@@ -846,7 +847,7 @@
       .browser-toolbar #fullscreen-button {
         order: 4;
         flex: 0 0 46px;
-        min-height: 42px;
+        min-height: 44px;
         padding: 0 10px;
       }
 
@@ -943,7 +944,7 @@
     }
 
     #proxy-form button {
-      min-height: 38px;
+      min-height: 44px;
       padding: 0 13px;
       font-size: 12px;
     }
@@ -1037,6 +1038,13 @@
       }
     }
 
+
+    @media (max-width: 600px) {
+      /* Keep touch targets at least 44px after compact toolbar overrides. */
+      .browser-toolbar > button {
+        min-height: 44px;
+      }
+    }
   </style>
 
 
