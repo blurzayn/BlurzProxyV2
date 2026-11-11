@@ -2117,7 +2117,6 @@ async function navigate(value, openInNewTab = linkBehaviorSelect.value === "new"
     setTabLoadState(tab, "loading", "Loading page…");
     renderTabs();
     updateBookmarkButton();
-    updatePokiDiagnosticsAvailability(tab);
     saveOpenTabs();
     try {
       tab.frame.go(destination.href);
