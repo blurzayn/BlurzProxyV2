@@ -17,6 +17,11 @@ const LOGIN_WINDOW = 15 * 60 * 1000;
 const LOGIN_MAX = 10;
 const API_WINDOW = 60 * 1000;
 const API_MAX = 120;
+// Authentication may be skipped only for local development. Codespaces and every
+// other environment keep the authentication gate enabled.
+const IS_CODESPACES = process.env.CODESPACES === "true" ||
+  Boolean(process.env.CODESPACE_NAME);
+const AUTH_REQUIRED = process.env.NODE_ENV !== "development" || IS_CODESPACES;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",").map((value) => value.trim()).filter(Boolean);
@@ -36,7 +41,9 @@ const COOKIE_SECURE = process.env.COOKIE_SECURE
   ? process.env.COOKIE_SECURE === "true" : process.env.NODE_ENV === "production";
 
 if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new RangeError("Invalid PORT.");
-if (ADMIN_PASSWORD.length < 16) throw new Error("ADMIN_PASSWORD must be at least 16 characters.");
+if (AUTH_REQUIRED && ADMIN_PASSWORD.length < 16) {
+  throw new Error("ADMIN_PASSWORD must be at least 16 characters.");
+}
 if (process.env.NODE_ENV === "production" &&
     /^(replace-with-|change-me|changeme|password$|test-only)/i.test(ADMIN_PASSWORD)) {
   throw new Error("ADMIN_PASSWORD must be replaced with a unique production secret.");
@@ -95,8 +102,10 @@ const SCRYPT_OPTIONS = Object.freeze({
   p: 1,
   maxmem: 256 * 1024 * 1024
 });
-const passwordSalt = crypto.randomBytes(16);
-const passwordDigest = crypto.scryptSync(ADMIN_PASSWORD, passwordSalt, 64, SCRYPT_OPTIONS);
+const passwordSalt = AUTH_REQUIRED ? crypto.randomBytes(16) : null;
+const passwordDigest = AUTH_REQUIRED
+  ? crypto.scryptSync(ADMIN_PASSWORD, passwordSalt, 64, SCRYPT_OPTIONS)
+  : null;
 let activePasswordChecks = 0;
 const MAX_ACTIVE_PASSWORD_CHECKS = 2;
 
@@ -200,11 +209,12 @@ const loginPage = [
 ].join("");
 
 app.get("/login", (req, res) => {
-  if (getSession(req)) return res.redirect("/");
+  if (!AUTH_REQUIRED || getSession(req)) return res.redirect("/");
   res.setHeader("Cache-Control", "no-store");
   res.type("html").send(loginPage);
 });
 app.post("/auth/login", loginLimiter, async (req, res) => {
+  if (!AUTH_REQUIRED) return res.status(404).json({ error: "Authentication is disabled in local development." });
   const origin = req.get("origin");
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
     logEvent("warn", "authentication_failed", { reason: "origin_not_allowed" });
@@ -246,7 +256,7 @@ app.post("/auth/login", loginLimiter, async (req, res) => {
 });
 app.get("/auth/session", (req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  res.json({ authenticated: Boolean(getSession(req)) });
+  res.json({ authenticated: !AUTH_REQUIRED || Boolean(getSession(req)) });
 });
 app.post("/auth/logout", (req, res) => {
   const current = getSession(req);
@@ -268,8 +278,10 @@ app.get("/readyz", (req, res) => {
   });
 });
 
-// All app, API and vendor assets require an active session.
+// Codespaces and production always require a session. Only local development
+// may serve the app without one.
 app.use((req, res, next) => {
+  if (!AUTH_REQUIRED) return next();
   if (["/healthz", "/readyz", "/login", "/auth/login", "/auth/session", "/auth/logout"].includes(req.path)) {
     return next();
   }
@@ -355,12 +367,12 @@ server.on("upgrade", (request, socket, head) => {
   const origin = request.headers.origin;
   const current = getSession({ headers: request.headers });
   if (request.url?.split("?")[0] !== "/wisp/" || !origin ||
-      !ALLOWED_ORIGINS.has(origin) || !current) {
+      !ALLOWED_ORIGINS.has(origin) || (AUTH_REQUIRED && !current)) {
     socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
     socket.destroy();
     return;
   }
-  let sockets = sessionSockets.get(current.token);
+  let sockets = current ? sessionSockets.get(current.token) : null;
   if (websocketSockets.size >= MAX_WEBSOCKETS_TOTAL ||
       (sockets && sockets.size >= MAX_WEBSOCKETS_PER_SESSION)) {
     socket.write("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\nRetry-After: 60\r\n\r\n");
@@ -368,13 +380,16 @@ server.on("upgrade", (request, socket, head) => {
     return;
   }
   websocketSockets.add(socket);
-  if (!sockets) {
-    sockets = new Set();
-    sessionSockets.set(current.token, sockets);
+  if (current) {
+    if (!sockets) {
+      sockets = new Set();
+      sessionSockets.set(current.token, sockets);
+    }
+    sockets.add(socket);
   }
-  sockets.add(socket);
   socket.once("close", () => {
     websocketSockets.delete(socket);
+    if (!current) return;
     const activeSockets = sessionSockets.get(current.token);
     if (activeSockets) {
       activeSockets.delete(socket);
