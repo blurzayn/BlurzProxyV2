@@ -18,7 +18,13 @@ cd BlurzProxyV2/BlurzProxy
 
 ## Configure access before starting
 
-The server fails closed unless an administrator password and at least one exact trusted browser origin are configured. Create `BlurzProxy/.env` from this template and never commit real secrets:
+The server fails closed unless an administrator password and at least one exact trusted browser origin are configured. From the `BlurzProxy` directory, copy the template to your private local environment file, then edit it. Never commit real secrets:
+
+```bash
+cp .env.example .env
+```
+
+Set the values in `.env` (not in the template):
 
 ```dotenv
 ADMIN_PASSWORD=replace-with-a-random-secret-at-least-16-characters-long
