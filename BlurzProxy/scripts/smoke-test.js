@@ -569,6 +569,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(app, /async function reopenClosedTab\(\)/);
   assert.match(app, /keys: "Ctrl\+Shift\+T"/);
   assert.match(app, /async function copyCurrentAddress\(\)/);
+  assert.match(app, /BlurzProxy does not bypass site security checks/);
   assert.doesNotMatch(app, /if \(restoredOpenTabs\.length\)/);
   assert.match(css, /\.browser-action-feedback/);
 });

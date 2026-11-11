@@ -2,9 +2,11 @@ const assert = require("node:assert/strict");
 const { spawn } = require("node:child_process");
 const { once } = require("node:events");
 const net = require("node:net");
+const crypto = require("node:crypto");
 const { after, before, test } = require("node:test");
 
 const PASSWORD = "test-only-password-12345";
+const WEBSOCKET_KEY = crypto.randomBytes(16).toString("base64");
 let server;
 let baseUrl;
 let serverOutput = "";
@@ -98,7 +100,7 @@ function websocketStatus({ origin, cookie, path = "/wisp/" }) {
         `Host: ${target.host}`,
         "Upgrade: websocket",
         "Connection: Upgrade",
-        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==",
+        `Sec-WebSocket-Key: ${WEBSOCKET_KEY}`,
         "Sec-WebSocket-Version: 13",
         `Origin: ${origin}`
       ];
