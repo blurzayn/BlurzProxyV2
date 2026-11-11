@@ -11,7 +11,13 @@
     "audit": "npm audit --audit-level=low",
     "start:codespaces": "bash ../.devcontainer/start-proxy.sh"
   },
-  "keywords": ["authenticated-browser", "web-transport", "express", "scramjet", "security"],
+  "keywords": [
+    "authenticated-browser",
+    "web-transport",
+    "express",
+    "scramjet",
+    "security"
+  ],
   "author": "BlurzProxy contributors",
   "license": "ISC",
   "type": "commonjs",
@@ -24,7 +30,8 @@
     "@useinterstellar/scramjet": "1.1.0-fixed",
     "cors": "2.8.6",
     "dotenv": "18.0.9",
-    "express": "5.3.0"
+    "express": "5.3.0",
+    "ipaddr.js": "2.5.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

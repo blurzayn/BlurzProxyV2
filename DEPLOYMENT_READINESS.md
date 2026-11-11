@@ -11,8 +11,8 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add login and API rate limits.
 - [x] Use HTTP-only, SameSite=Strict cookies; require secure cookies and HTTPS in production; cap session lifetime.
 - [~] Keep the Codespaces forwarded port private. The devcontainer now declares port 3000 private with HTTPS forwarding; verify the live Ports panel still shows Private. Codespaces is for private development/testing, not always-on production hosting.
-- [~] Configure Wisp to reject direct-IP, private/reserved, loopback, and UDP destinations and limit TCP ports to 80/443. Source review of the pinned Wisp 0.5.3 implementation confirms it resolves a hostname, validates that resolved IP (including IPv4-mapped IPv6 normalization), and passes that same resolved IP into the socket connection; direct IPs are blocked. DNS cache retention is now bounded to 30 seconds / 1,024 entries. This is stronger evidence, but still not a complete SSRF assurance: add integration tests for mixed public/private DNS answers, rebinding over cache expiry, IPv6 special ranges, and actual denied connection attempts.
-- [~] Keep production secrets out of source control, validate required startup settings, and use a template-only `.env.example`. Historical Git contents and any required credential rotation must be checked separately.
+- [~] Wisp transport restrictions now include a custom DNS resolver that examines the complete system DNS answer set and rejects the hostname if any answer is not globally routable. This addresses mixed public/private answers before Wisp's single-address cache/socket flow. Direct-IP, private/loopback, UDP, and non-web-port restrictions remain enabled; DNS cache retention is 30 seconds / 1,024 entries. Unit tests cover mixed answers, IPv4-mapped IPv6, and special-use address classes. Still required before production: execute Wisp-protocol integration tests against actual denied connection attempts, verify DNS changes across cache expiry, and perform host-level egress controls.
+- [~] Keep production secrets out of source control, validate required startup settings, and use a template-only `.env.example`. The repository is currently public. A full-history Gitleaks workflow has been added; its first run is pending. Any detected credential must be revoked/rotated before considering history cleanup. GitHub secret-scanning alert access was not available during this review.
 
 ## P1 — High
 
@@ -38,7 +38,7 @@ This checklist tracks the requirements in the deployment plan. It is intentional
 - [x] Add structured logs and authenticated runtime metrics.
 - [ ] Configure operational alerts and an external uptime/memory monitoring destination after the hosting target is selected.
 - [x] Pin GitHub Actions to immutable commit SHAs and cancel superseded workflow runs.
-- [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. GitHub currently reports `main` and `security/auth-gate` as unprotected, and no repository rulesets are configured. This repository setting needs owner/admin access.
+- [ ] Configure branch protection so the required CI and CodeQL checks must pass before merging. No repository rulesets were returned during this review; branch-protection settings could not be read with the available GitHub connection. Owner/admin access is required to verify and configure this.
 - [ ] Configure production deployment behind a manual approval gate after the hosting target is selected.
 - [ ] Document backup, restore, and rollback procedures for the selected host, then test a restore.
 
