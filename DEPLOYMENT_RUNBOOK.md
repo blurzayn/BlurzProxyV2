@@ -80,16 +80,18 @@ Do not overwrite the only production copy during a restore test.
 
 A tested rollback is still outstanding until exercised on the selected host.
 
-## 7. GitHub merge and deployment gates
+## 7. GitHub repository protections and optional deployment automation
 
-The repository's active `Protect main` ruleset applies to the default branch (`main`). It requires pull requests, an up-to-date branch, and these five successful checks:
-- Require pull requests before merging.
-- Require the latest PR branch to be up to date.
-- Require the CI jobs: `Smoke, security, and browser tests`, `npm dependency security audit`, and `Production container build and Compose validation`.
-- Require CodeQL's `Analyze JavaScript` check.
-- Require the `Scan full Git history for exposed secrets` check.
-- Block force pushes and branch deletion.
+The active `Protect main` ruleset applies to the default branch (`main`). It requires pull requests, an up-to-date branch, and all five of these successful status checks:
 
-After a production host is selected, create a GitHub Environment named `production`, require manual approval from a trusted reviewer, and store deployment credentials only as environment secrets. Connect the actual deployment workflow only after its host-specific action and rollback procedure have been reviewed.
+- `Smoke, security, and browser tests`
+- `npm dependency security audit`
+- `Production container build and Compose validation`
+- `Analyze JavaScript` (CodeQL)
+- `Scan full Git history for exposed secrets` (Gitleaks)
 
-These repository and environment settings require owner/admin access and are not applied by this runbook.
+The ruleset also blocks force pushes and branch deletion. It does not require a separate approval, which is appropriate for the current solo-maintainer workflow.
+
+A GitHub Environment named `production` can be used if an automated deployment workflow is introduced later. Do not add deployment credentials or a deployment workflow merely to publish this open-source project. Any future deployment automation should be reviewed separately for permissions, target restrictions, secret handling, and rollback behavior.
+
+This runbook documents operator procedures. It does not claim that a production host, monitoring destination, backup, restore, or rollback has been provisioned or tested.
