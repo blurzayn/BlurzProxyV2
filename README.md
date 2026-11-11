@@ -2,9 +2,29 @@
 
 A browser-based web proxy powered by Scramjet.
 
+## Self-hosting: everyone runs their own instance
+
+BlurzProxy is designed to be cloned and run independently. You do not need access to the original developer's Codespace or server, and the project does not send every user's browsing through one centrally hosted BlurzProxy server. Each person or organization runs and maintains their own copy, chooses its own access password, and is responsible for its own hosting and network.
+
+For a private instance on your own computer, follow the local setup below. For an instance other people can reach over the internet, use the Docker + Caddy deployment below on a server you control. Do not expose the Node app's port 3000 directly to the public internet.
+
+### Clone the project
+
+```bash
+git clone https://github.com/blurzayn/BlurzProxyV2.git
+cd BlurzProxyV2/BlurzProxy
+```
+
+
 ## Configure access before starting
 
-The server fails closed unless an administrator password and at least one exact trusted browser origin are configured. Create `BlurzProxy/.env` from this template and never commit real secrets:
+The server fails closed unless an administrator password and at least one exact trusted browser origin are configured. From the `BlurzProxy` directory, copy the template to your private local environment file, then edit it. Never commit real secrets:
+
+```bash
+cp .env.example .env
+```
+
+Set the values in `.env` (not in the template):
 
 ```dotenv
 ADMIN_PASSWORD=replace-with-a-random-secret-at-least-16-characters-long
@@ -16,15 +36,15 @@ Use a randomly generated password of at least 16 characters. In production, serv
 
 Open `/login` and sign in with `ADMIN_PASSWORD`. Sessions use an HttpOnly, SameSite=Strict cookie with an eight-hour maximum lifetime. Sessions and rate-limit counters are stored in process memory and are cleared on restart. Run a single application instance unless you add shared session and rate-limit storage; otherwise sessions and limits will not be consistent across instances.
 
+**Account model:** this version uses one instance-wide administrator/access password, not separate user accounts. Everyone who uses the same instance signs in with that password. Only share it with people you trust; if you want different people to have separate credentials, that requires a separate account-management feature. The intended self-hosting model is for each person or organization to run their own isolated instance.
+
 ## Run it
 
 Install [Node.js](https://nodejs.org/), then run:
 
 ```bash
-cd BlurzProxyV2/BlurzProxy
 npm ci
 npx playwright install chromium
-npm test
 npm run check
 npm start
 ```

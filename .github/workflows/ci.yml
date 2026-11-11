@@ -82,9 +82,12 @@ jobs:
         working-directory: BlurzProxy
         run: npm ci
 
+      # GitHub-hosted Ubuntu runners already include Playwright's required OS
+      # libraries. Avoid --with-deps here: it invokes apt and can stall when
+      # Ubuntu package mirrors have transient DNS/network failures.
       - name: Install Chromium
         working-directory: BlurzProxy
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run smoke, security, and browser tests
         working-directory: BlurzProxy
