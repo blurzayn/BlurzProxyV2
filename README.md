@@ -43,10 +43,8 @@ Open `/login` and sign in with `ADMIN_PASSWORD`. Sessions use an HttpOnly, SameS
 Install [Node.js](https://nodejs.org/), then run:
 
 ```bash
-cd BlurzProxyV2/BlurzProxy
 npm ci
 npx playwright install chromium
-npm test
 npm run check
 npm start
 ```
