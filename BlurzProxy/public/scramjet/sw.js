@@ -3,11 +3,8 @@ importScripts("/vendor/scramjet/scramjet.all.js");
 const { ScramjetServiceWorker } = $scramjetLoadWorker();
 const scramjet = new ScramjetServiceWorker();
 
-// Poki serves its game thumbnails from its image CDN. Its older /f=auto
-// image paths return 404 when requested from poki.com through the proxy.
+// Poki's /f=auto/ thumbnails are served from its image CDN, not poki.com.
 function rewritePokiImageRequest(request) {
-  if (request.destination !== "image") return request;
-
   const proxyUrl = new URL(request.url);
   const prefix = "/scramjet/";
   if (!proxyUrl.pathname.startsWith(prefix)) return request;
@@ -23,12 +20,14 @@ function rewritePokiImageRequest(request) {
     return request;
   }
 
-  const match = destination.pathname.match(/^\/f=auto\/([a-f0-9]{32}\/.+)$/i);
-  if (!match) return request;
+  // Poki uses several asset identifiers (hex hashes, UUIDs, and filenames).
+  // Match the whole /f=auto/ asset path instead of assuming one hash format.
+  const assetPath = destination.pathname.match(/^\/f=auto\/(.+)$/i)?.[1];
+  if (!assetPath || assetPath.includes("..")) return request;
 
   destination.hostname = "img.poki-cdn.com";
   destination.pathname =
-    `/cdn-cgi/image/q=78,scq=50,width=277,height=277,fit=cover,f=auto/${match[1]}`;
+    `/cdn-cgi/image/q=78,scq=50,width=277,height=277,fit=cover,f=auto/${assetPath}`;
 
   const rewrittenProxyUrl = new URL(request.url);
   rewrittenProxyUrl.pathname = prefix + encodeURIComponent(destination.href);
@@ -39,15 +38,24 @@ self.addEventListener("fetch", (event) => {
   event.respondWith((async () => {
     await scramjet.loadConfig();
 
-    const request = rewritePokiImageRequest(event.request);
-    const routedEvent = request === event.request
+    const originalRequest = event.request;
+    const request = rewritePokiImageRequest(originalRequest);
+
+    // Preserve the real FetchEvent (including its browser-owned getters) while
+    // substituting only the request URL that Scramjet routes.
+    const routedEvent = request === originalRequest
       ? event
-      : { request, clientId: event.clientId };
+      : new Proxy(event, {
+          get(target, property) {
+            if (property === "request") return request;
+            return Reflect.get(target, property, target);
+          }
+        });
 
     if (scramjet.route(routedEvent)) {
       return scramjet.fetch(routedEvent);
     }
 
-    return fetch(event.request);
+    return fetch(originalRequest);
   })());
 });
