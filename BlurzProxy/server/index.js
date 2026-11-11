@@ -10,7 +10,9 @@ require("dotenv").config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const HOST = process.env.HOST || "127.0.0.1";
+const IS_CODESPACES = process.env.CODESPACES === "true" ||
+  Boolean(process.env.CODESPACE_NAME);
+const HOST = process.env.HOST || (IS_CODESPACES ? "0.0.0.0" : "127.0.0.1");
 const COOKIE = "blurzproxy_session";
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 const LOGIN_WINDOW = 15 * 60 * 1000;
@@ -19,12 +21,25 @@ const API_WINDOW = 60 * 1000;
 const API_MAX = 120;
 // Authentication may be skipped only for local development. Codespaces and every
 // other environment keep the authentication gate enabled.
-const IS_CODESPACES = process.env.CODESPACES === "true" ||
-  Boolean(process.env.CODESPACE_NAME);
 const AUTH_REQUIRED = process.env.NODE_ENV !== "development" || IS_CODESPACES;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",").map((value) => value.trim()).filter(Boolean);
+
+// Add the exact Codespaces forwarded origin even when the server is started
+// directly with "npm start" instead of the Codespaces helper script.
+if (IS_CODESPACES && process.env.CODESPACE_NAME &&
+    process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN) {
+  const codespaceName = process.env.CODESPACE_NAME;
+  const forwardingDomain = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN;
+  if (!/^[a-z0-9-]+$/i.test(codespaceName) ||
+      !/^[a-z0-9.-]+$/i.test(forwardingDomain)) {
+    throw new Error("Invalid Codespaces forwarded-origin environment.");
+  }
+  configuredOrigins.push(
+    `https://${codespaceName}-3000.${forwardingDomain}`
+  );
+}
 const ALLOWED_ORIGINS = new Set(configuredOrigins.map((value) => {
   let parsed;
   try { parsed = new URL(value); }
@@ -37,7 +52,9 @@ const ALLOWED_ORIGINS = new Set(configuredOrigins.map((value) => {
   }
   return parsed.origin;
 }));
-const COOKIE_SECURE = process.env.COOKIE_SECURE
+// Codespaces forwards the app over HTTPS, so its session cookie must be Secure
+// regardless of a local .env file's COOKIE_SECURE setting.
+const COOKIE_SECURE = IS_CODESPACES ? true : process.env.COOKIE_SECURE
   ? process.env.COOKIE_SECURE === "true" : process.env.NODE_ENV === "production";
 
 if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new RangeError("Invalid PORT.");
@@ -203,7 +220,7 @@ const loginPage = [
   "const error=document.getElementById('error');const button=e.currentTarget.querySelector('button');",
   "button.disabled=true;error.textContent='';try{const r=await fetch('/auth/login',{method:'POST',",
   "headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('password').value})});",
-  "if(!r.ok)throw Error(r.status===429?'Too many attempts. Try later.':'Sign-in failed.');location.replace('/');",
+  "const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||(r.status===429?'Too many attempts. Try later.':'Sign-in failed.'));location.replace('/');",
   "}catch(x){error.textContent=x.message;}finally{button.disabled=false;}});",
   "</script></main></body></html>"
 ].join("");
