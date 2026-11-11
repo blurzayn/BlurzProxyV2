@@ -1819,7 +1819,22 @@ async function runPokiDiagnostics() {
     if (!doc) throw new Error("The proxied page document is not accessible yet.");
     lines.push(`Document ready state: ${doc.readyState}`);
     lines.push(`Page title: ${doc.title || "(none)"}`);
+    lines.push(`Actual document URL: ${doc.location.href}`);
     lines.push(`Viewport: ${doc.documentElement.clientWidth}x${doc.documentElement.clientHeight}`);
+
+    const navigation = doc.defaultView.performance.getEntriesByType("navigation")[0];
+    if (navigation) {
+      lines.push(`Navigation response: status=${navigation.responseStatus ?? "unavailable"}; transfer=${navigation.transferSize}; duration=${Math.round(navigation.duration)}ms`);
+    }
+    const failedResources = doc.defaultView.performance.getEntriesByType("resource")
+      .filter((entry) => Number(entry.responseStatus) >= 400)
+      .slice(0, 20);
+    lines.push(`Resources with HTTP errors (first 20): ${failedResources.length}`);
+    failedResources.forEach((entry, index) => {
+      let host = "(unknown)";
+      try { host = new URL(entry.name).hostname; } catch {}
+      lines.push(`HTTP error ${index + 1}: status=${entry.responseStatus}; host=${host}; url=${entry.name.slice(0, 220)}`);
+    });
 
     const images = [...doc.images];
     const loaded = images.filter((img) => img.complete && img.naturalWidth > 0).length;
@@ -1836,7 +1851,7 @@ async function runPokiDiagnostics() {
       } catch {}
       const parentText = (img.parentElement?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 90);
       lines.push(
-        `Image ${index + 1}: ${img.complete && img.naturalWidth > 0 ? "loaded" : img.complete ? "failed" : "pending"}; ${img.naturalWidth}x${img.naturalHeight}; host=${sourceHost}; display=${style.display}; visibility=${style.visibility}; opacity=${style.opacity}; rect=${Math.round(rect.width)}x${Math.round(rect.height)}; alt=${(img.alt || "").slice(0, 80)}; nearby text=${parentText || "(none)"}`
+        `Image ${index + 1}: ${img.complete && img.naturalWidth > 0 ? "loaded" : img.complete ? "failed" : "pending"}; ${img.naturalWidth}x${img.naturalHeight}; host=${sourceHost}; src=${(img.currentSrc || img.src).slice(0, 220)}; loading=${img.loading}; display=${style.display}; visibility=${style.visibility}; opacity=${style.opacity}; rect=${Math.round(rect.width)}x${Math.round(rect.height)}; alt=${(img.alt || "").slice(0, 80)}; nearby text=${parentText || "(none)"}`
       );
     });
 
