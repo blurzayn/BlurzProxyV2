@@ -40,10 +40,10 @@ if (IS_CODESPACES && process.env.CODESPACE_NAME &&
     `https://${codespaceName}-3000.${forwardingDomain}`
   );
   // Some Codespaces browser/port-forwarding clients expose the forwarded
-  // application as this exact loopback origin. Never trust this insecure
-  // origin when NODE_ENV=production.
+  // application through a loopback origin. Trust only these exact port-3000
+  // origins in non-production Codespaces; never add them in production.
   if (process.env.NODE_ENV !== "production") {
-    configuredOrigins.push("http://localhost:3000");
+    configuredOrigins.push("http://localhost:3000", "https://localhost:3000");
   }
 }
 const ALLOWED_ORIGINS = new Set(configuredOrigins.map((value) => {
