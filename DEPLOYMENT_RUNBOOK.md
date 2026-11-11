@@ -82,7 +82,7 @@ A tested rollback is still outstanding until exercised on the selected host.
 
 ## 7. GitHub merge and deployment gates
 
-Configure repository rules for both `main` and `security/auth-gate`:
+The repository's active `Protect main` ruleset applies to the default branch (`main`). It requires pull requests, an up-to-date branch, and these five successful checks:
 - Require pull requests before merging.
 - Require the latest PR branch to be up to date.
 - Require the CI jobs: `Smoke, security, and browser tests`, `npm dependency security audit`, and `Production container build and Compose validation`.
