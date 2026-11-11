@@ -39,6 +39,9 @@ if (IS_CODESPACES && process.env.CODESPACE_NAME &&
   configuredOrigins.push(
     `https://${codespaceName}-3000.${forwardingDomain}`
   );
+  // Some Codespaces browser/port-forwarding clients expose the forwarded
+  // application to the browser as this exact loopback origin.
+  configuredOrigins.push("http://localhost:3000");
 }
 const ALLOWED_ORIGINS = new Set(configuredOrigins.map((value) => {
   let parsed;
