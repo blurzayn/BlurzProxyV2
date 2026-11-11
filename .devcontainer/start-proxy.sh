@@ -6,11 +6,8 @@ cd "$(dirname "$0")/../BlurzProxy"
 # Keep the Codespaces forwarded URL on the exact-origin allowlist.
 if [ -n "${CODESPACE_NAME:-}" ]; then
   export HOST="${HOST:-0.0.0.0}"
-  if [ -z "${ADMIN_PASSWORD:-}" ]; then
-    echo "Set ADMIN_PASSWORD as a GitHub Codespaces secret before starting BlurzProxy."
-    exit 1
-  fi
-
+  # Codespaces serves the forwarded app over HTTPS; keep the session cookie Secure.
+  export COOKIE_SECURE=true
   if [ -z "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
     echo "Could not determine the Codespaces forwarded origin. Set GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN or ALLOWED_ORIGINS explicitly."
     exit 1
