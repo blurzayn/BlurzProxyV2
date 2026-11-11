@@ -131,7 +131,7 @@ async function websocketUpgrade(origin, cookie) {
   });
 }
 
-async function launchIsolatedServer(port) {
+async function launchIsolatedServer(port, extraEnv = {}) {
   const url = `http://127.0.0.1:${port}`;
   const child = spawn(process.execPath, [serverPath], {
     cwd: path.join(__dirname, ".."),
@@ -141,7 +141,8 @@ async function launchIsolatedServer(port) {
       PORT: String(port),
       ADMIN_PASSWORD: "test-only-password-12345",
       ALLOWED_ORIGINS: url,
-      COOKIE_SECURE: "false"
+      COOKIE_SECURE: "false",
+      ...extraEnv
     },
     stdio: ["ignore", "pipe", "pipe"]
   });
@@ -281,6 +282,51 @@ after(async () => {
   }
 });
 
+
+test("local development skips sign-in while Codespaces still requires authentication", async () => {
+  const port = await getFreePort();
+  const local = await launchIsolatedServer(port, {
+    NODE_ENV: "development",
+    CODESPACES: "false",
+    ADMIN_PASSWORD: ""
+  });
+  try {
+    const [home, status, loginPage, session] = await Promise.all([
+      fetch(local.url + "/"),
+      fetch(local.url + "/api/status"),
+      fetch(local.url + "/login", { redirect: "manual" }),
+      fetch(local.url + "/auth/session")
+    ]);
+    assert.equal(home.status, 200);
+    assert.equal(status.status, 200);
+    assert.equal(loginPage.status, 302);
+    assert.equal(loginPage.headers.get("location"), "/");
+    assert.deepEqual(await session.json(), { authenticated: true });
+    const websocket = await websocketUpgrade(local.url, null);
+    assert.match(websocket.response, /^HTTP\/1\.1 101/);
+    websocket.socket.destroy();
+  } finally {
+    await stopIsolatedServer(local);
+  }
+
+  const codespaces = spawnSync(process.execPath, [serverPath], {
+    cwd: path.join(__dirname, ".."),
+    env: {
+      ...process.env,
+      NODE_ENV: "development",
+      CODESPACES: "true",
+      HOST: "127.0.0.1",
+      PORT: String(await getFreePort()),
+      ADMIN_PASSWORD: "",
+      ALLOWED_ORIGINS: "https://example.app.github.dev",
+      COOKIE_SECURE: "true"
+    },
+    encoding: "utf8",
+    timeout: 3000
+  });
+  assert.notEqual(codespaces.status, 0);
+  assert.match(codespaces.stderr, /ADMIN_PASSWORD must be at least 16 characters/);
+});
 
 test("Wisp WebSocket upgrades require an approved origin and an authenticated session", async () => {
   const rejectedOrigin = await websocketUpgrade("https://untrusted.example");
