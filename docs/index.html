@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131b">
+  <meta name="description" content="BlurzProxyV2 is an open-source browser-based web proxy designed for independent self-hosting.">
+  <title>BlurzProxyV2 — Open-source, self-hosted</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b0e14;--panel:#141a25;--line:#293346;--text:#eef3ff;--muted:#aab6ca;--accent:#8b9cff;--accent2:#b6c1ff}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#20294a 0,transparent 42%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+    a{color:var(--accent2)}a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}
+    header{padding:26px 0;border-bottom:1px solid var(--line)}.brand{font-weight:750;letter-spacing:.02em}.nav{display:flex;gap:22px;flex-wrap:wrap;float:right}
+    main{padding:86px 0 56px}.eyebrow{color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:.78rem}
+    h1{font-size:clamp(2.7rem,7vw,5.2rem);line-height:1.02;letter-spacing:-.055em;max-width:850px;margin:18px 0}
+    .lead{font-size:1.2rem;color:var(--muted);max-width:700px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0}
+    .btn{display:inline-block;padding:12px 18px;border-radius:10px;border:1px solid var(--line);text-decoration:none;font-weight:700}.primary{background:var(--accent);color:#10131b;border-color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:48px 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}.card h2{font-size:1.05rem;margin-top:0}.card p{color:var(--muted);margin-bottom:0}
+    .notice{border-left:3px solid var(--accent);background:var(--panel);padding:18px 20px;border-radius:8px;color:var(--muted)}
+    footer{border-top:1px solid var(--line);padding:25px 0 40px;color:var(--muted);font-size:.9rem}
+    @media(max-width:620px){.nav{float:none;margin-top:12px}main{padding-top:58px}}
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><span class="brand">BlurzProxyV2</span><nav class="nav" aria-label="Main navigation"><a href="https://github.com/blurzayn/BlurzProxyV2">GitHub</a><a href="https://github.com/blurzayn/BlurzProxyV2/blob/security/auth-gate/README.md">Setup guide</a><a href="https://github.com/blurzayn/BlurzProxyV2/blob/security/auth-gate/CONTRIBUTING.md">Contribute</a></nav></div></header>
+  <main class="wrap">
+    <p class="eyebrow">Open source · Self-hosted</p>
+    <h1>Your browser.<br>Run your own instance.</h1>
+    <p class="lead">BlurzProxyV2 is a browser-based web proxy project powered by Scramjet. Clone the source, configure your own instance, and operate it on infrastructure you control.</p>
+    <div class="actions"><a class="btn primary" href="https://github.com/blurzayn/BlurzProxyV2">View the repository</a><a class="btn" href="https://github.com/blurzayn/BlurzProxyV2/blob/security/auth-gate/README.md">Read the setup guide</a></div>
+    <div class="notice"><strong>Independent deployments:</strong> this project distributes software, not a centrally operated public proxy. Each operator is responsible for their own users, security configuration, network controls, and hosting-provider rules. Do not expose an instance until its security and deployment requirements have been reviewed.</div>
+    <section class="grid" aria-label="Project features">
+      <article class="card"><h2>Clone and customize</h2><p>Start from the public source repository and adapt the project to your own environment.</p></article>
+      <article class="card"><h2>Self-host your copy</h2><p>Follow the local setup or Docker and Caddy deployment instructions in the repository.</p></article>
+      <article class="card"><h2>Security-conscious defaults</h2><p>Authentication, origin checks, rate limits, and outbound network controls are part of the project’s security work. Review the current readiness checklist before deployment.</p></article>
+    </section>
+    <p>New to the project? Start with the <a href="https://github.com/blurzayn/BlurzProxyV2/blob/security/auth-gate/README.md">README and installation guide</a>. Want to help? Read the <a href="https://github.com/blurzayn/BlurzProxyV2/blob/security/auth-gate/CONTRIBUTING.md">contributor guide</a> and <a href="https://github.com/blurzayn/BlurzProxyV2/blob/security/auth-gate/SECURITY.md">security policy</a>.</p>
+  </main>
+  <footer><div class="wrap">BlurzProxyV2 · Open-source project · <a href="https://github.com/blurzayn/BlurzProxyV2">Source on GitHub</a></div></footer>
+</body>
+</html>
