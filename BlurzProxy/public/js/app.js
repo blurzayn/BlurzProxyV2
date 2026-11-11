@@ -1834,7 +1834,7 @@ async function runPokiDiagnostics() {
       try {
         sourceHost = new URL(img.currentSrc || img.src).hostname;
       } catch {}
-      const parentText = (img.parentElement?.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 90);
+      const parentText = (img.parentElement?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 90);
       lines.push(
         `Image ${index + 1}: ${img.complete && img.naturalWidth > 0 ? "loaded" : img.complete ? "failed" : "pending"}; ${img.naturalWidth}x${img.naturalHeight}; host=${sourceHost}; display=${style.display}; visibility=${style.visibility}; opacity=${style.opacity}; rect=${Math.round(rect.width)}x${Math.round(rect.height)}; alt=${(img.alt || "").slice(0, 80)}; nearby text=${parentText || "(none)"}`
       );
@@ -1850,7 +1850,7 @@ async function runPokiDiagnostics() {
     backgroundImages.forEach((element, index) => {
       const style = doc.defaultView.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
-      const text = (element.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 90);
+      const text = (element.innerText || "").replace(/\s+/g, " ").trim().slice(0, 90);
       lines.push(
         `Background ${index + 1}: display=${style.display}; visibility=${style.visibility}; opacity=${style.opacity}; rect=${Math.round(rect.width)}x${Math.round(rect.height)}; text=${text || "(none)"}`
       );
