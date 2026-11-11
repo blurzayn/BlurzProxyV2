@@ -288,6 +288,7 @@ test("local development skips sign-in while Codespaces still requires authentica
   const local = await launchIsolatedServer(port, {
     NODE_ENV: "development",
     CODESPACES: "false",
+    CODESPACE_NAME: "",
     ADMIN_PASSWORD: ""
   });
   try {
@@ -315,6 +316,7 @@ test("local development skips sign-in while Codespaces still requires authentica
       ...process.env,
       NODE_ENV: "development",
       CODESPACES: "true",
+      CODESPACE_NAME: "test-codespace",
       HOST: "127.0.0.1",
       PORT: String(await getFreePort()),
       ADMIN_PASSWORD: "",
