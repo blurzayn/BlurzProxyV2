@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Access password").fill("test-only-password-12345");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(new RegExp("/$"));
 });
 
 test("opens on the homepage and leaves saved tabs unopened", async ({ page }) => {

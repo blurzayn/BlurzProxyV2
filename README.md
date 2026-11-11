@@ -53,7 +53,8 @@ Codespaces is a development environment, not an always-on production host. Use i
 2. Rebuild or restart the Codespace so the secret is available to its environment.
 3. The dev container binds to `0.0.0.0` inside the Codespace and configures port 3000 as **Private** with HTTPS forwarding. Keep it Private in the Ports panel; never change it to Public.
 4. The startup script derives the exact forwarded origin from GitHub's `CODESPACE_NAME` and `GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN` variables. You normally do not need to set `ALLOWED_ORIGINS` yourself. If you explicitly set it, it must exactly match the forwarded HTTPS origin.
-5. Open the forwarded port URL and sign in with the secret value.
+5. Start or restart the app from `BlurzProxy/` with `npm run start:codespaces`. This command derives the exact forwarded HTTPS origin, binds to `0.0.0.0` inside Codespaces, and writes startup diagnostics to `/tmp/blurzproxy.log`. Do not use plain `npm start` in Codespaces because it does not derive the forwarded origin.
+6. Open the forwarded port URL and sign in with the secret value.
 
 GitHub documents that private forwarded ports require GitHub authentication, while public ports can be reached by anyone who knows the URL. The app's own password remains required as a second access control. The unauthenticated `/healthz` and `/readyz` endpoints only report service status and do not grant application access.
 
