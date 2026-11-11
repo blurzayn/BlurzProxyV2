@@ -36,6 +36,8 @@ Use a randomly generated password of at least 16 characters. In production, serv
 
 Open `/login` and sign in with `ADMIN_PASSWORD`. Sessions use an HttpOnly, SameSite=Strict cookie with an eight-hour maximum lifetime. Sessions and rate-limit counters are stored in process memory and are cleared on restart. Run a single application instance unless you add shared session and rate-limit storage; otherwise sessions and limits will not be consistent across instances.
 
+**Account model:** this version uses one instance-wide administrator/access password, not separate user accounts. Everyone who uses the same instance signs in with that password. Only share it with people you trust; if you want different people to have separate credentials, that requires a separate account-management feature. The intended self-hosting model is for each person or organization to run their own isolated instance.
+
 ## Run it
 
 Install [Node.js](https://nodejs.org/), then run:
