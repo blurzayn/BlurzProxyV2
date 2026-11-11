@@ -358,10 +358,17 @@ app.use((error, req, res, next) => {
   const status = error.message === "Origin not allowed." ? 403
     : Number.isInteger(error.status) && error.status >= 400 && error.status < 500
       ? error.status : 500;
-  if (status >= 500) logEvent("error", "http_request_error", {
-    method: req.method, path: req.path, status
-  });
-  const message = status === 413 ? "Request body exceeds the 1 MB limit."
+  if (error.message === "Origin not allowed.") {
+    logEvent("warn", "cors_origin_rejected", {
+      method: req.method, path: req.path, origin: req.get("origin") || null
+    });
+  } else if (status >= 500) {
+    logEvent("error", "http_request_error", {
+      method: req.method, path: req.path, status
+    });
+  }
+  const message = error.message === "Origin not allowed." ? "Origin not allowed."
+    : status === 413 ? "Request body exceeds the 1 MB limit."
     : status === 400 ? "Invalid request body." : "Request failed.";
   res.status(status).json({ error: message });
 });
