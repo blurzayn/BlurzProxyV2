@@ -1,0 +1,15 @@
+title = "BlurzProxy Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow only the fixed RFC WebSocket handshake example in its historical test fixture."
+condition = "AND"
+paths = [
+  '''^BlurzProxy/scripts/security-test\.js$'''
+]
+regexTarget = "line"
+regexes = [
+  '''^\s*"Sec-WebSocket-Key: \x64\x47\x68\x6c\x49\x48\x4e\x68\x62\x58\x42\x73\x5a\x53\x42\x75\x62\x32\x35\x6a\x5a\x51\x3d\x3d",$'''
+]
