@@ -554,6 +554,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(home, /BlurzProxy always opens on the homepage/);
   assert.match(home, /id="restore-open-tabs"/);
   assert.match(worker, /blurz-app-v11/);
+  assert.match(worker, /response\.status === 200/);
   assert.match(app, /async function reopenClosedTab\(\)/);
   assert.match(app, /keys: "Ctrl\+Shift\+T"/);
   assert.match(app, /async function copyCurrentAddress\(\)/);
