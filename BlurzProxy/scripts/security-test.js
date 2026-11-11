@@ -33,6 +33,9 @@ async function startServer() {
       PORT: String(port),
       ADMIN_PASSWORD: PASSWORD,
       ALLOWED_ORIGINS: baseUrl,
+      CODESPACES: "true",
+      CODESPACE_NAME: "test-codespace",
+      GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: "app.github.dev",
       COOKIE_SECURE: "false"
     },
     stdio: ["ignore", "pipe", "pipe"]
@@ -153,14 +156,22 @@ test("WebSocket upgrades reject missing sessions and untrusted origins", async (
   assert.match(wrongPath, /^HTTP\/1\.1 403\b/);
 });
 
-test("CORS allows the configured origin and rejects an untrusted origin", async () => {
+test("CORS allows configured and exact Codespaces origins, and rejects untrusted origins", async () => {
   const cookie = await login();
-  const allowed = await fetch(`${baseUrl}/api/status`, {
-    headers: { cookie, origin: baseUrl }
-  });
-  assert.equal(allowed.status, 200);
-  assert.equal(allowed.headers.get("access-control-allow-origin"), baseUrl);
-  assert.equal(allowed.headers.get("access-control-allow-credentials"), "true");
+  const allowedOrigins = [
+    baseUrl,
+    "https://localhost:3000",
+    "https://test-codespace-3000.app.github.dev"
+  ];
+
+  for (const origin of allowedOrigins) {
+    const allowed = await fetch(`${baseUrl}/api/status`, {
+      headers: { cookie, origin }
+    });
+    assert.equal(allowed.status, 200, `expected ${origin} to be allowed`);
+    assert.equal(allowed.headers.get("access-control-allow-origin"), origin);
+    assert.equal(allowed.headers.get("access-control-allow-credentials"), "true");
+  }
 
   const denied = await fetch(`${baseUrl}/api/status`, {
     headers: { cookie, origin: "https://untrusted.example" }
