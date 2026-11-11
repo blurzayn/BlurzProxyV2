@@ -663,7 +663,7 @@ function setTabLoadState(tab, state, text = "") {
   tab.loadStatus.hidden = !text;
   if (tab.loading) {
     tab.loadTimeout = window.setTimeout(() => {
-      setTabLoadState(tab, "error", "Page load timed out. Try reloading.");
+      setTabLoadState(tab, "error", "This site did not finish loading. It may require browser features, a site security check, or access through its official website. BlurzProxy does not bypass site security checks.");
     }, 30000);
   }
 }
