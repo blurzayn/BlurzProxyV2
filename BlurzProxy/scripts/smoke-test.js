@@ -83,8 +83,8 @@ async function authenticatedFetch(url, options = {}) {
   });
 }
 
-async function websocketUpgrade(origin, cookie) {
-  const port = Number(new URL(baseUrl).port);
+async function websocketUpgrade(origin, cookie, targetUrl = baseUrl) {
+  const port = Number(new URL(targetUrl).port);
   return new Promise((resolve, reject) => {
     const socket = net.connect(port, "127.0.0.1");
     let response = "";
@@ -302,7 +302,7 @@ test("local development skips sign-in while Codespaces still requires authentica
     assert.equal(loginPage.status, 302);
     assert.equal(loginPage.headers.get("location"), "/");
     assert.deepEqual(await session.json(), { authenticated: true });
-    const websocket = await websocketUpgrade(local.url, null);
+    const websocket = await websocketUpgrade(local.url, null, local.url);
     assert.match(websocket.response, /^HTTP\/1\.1 101/);
     websocket.socket.destroy();
   } finally {
