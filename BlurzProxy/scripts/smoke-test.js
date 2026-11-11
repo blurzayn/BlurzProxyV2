@@ -528,7 +528,7 @@ test("engine status lists required browser dependencies", async () => {
 });
 
 test("homepage and browser assets are served with the new browser actions", async () => {
-  const [homeResponse, appResponse, cssResponse, workerResponse] = await Promise.all([
+  const [homeResponse, appResponse, cssResponse, workerResponse, scramjetWorkerResponse] = await Promise.all([
     authenticatedFetch(`${baseUrl}/`),
     authenticatedFetch(`${baseUrl}/js/app.js`),
     authenticatedFetch(`${baseUrl}/css/style.css`),
@@ -568,7 +568,7 @@ test("homepage and browser assets are served with the new browser actions", asyn
   assert.match(worker, /blurz-app-v11/);
   assert.match(worker, /response\.status === 200/);
   assert.match(scramjetWorker, /function rewritePokiImageRequest\(request\)/);
-  assert.match(scramjetWorker, /img\\.poki-cdn\\.com/);
+  assert.match(scramjetWorker, /img\.poki-cdn\.com/);
   assert.match(scramjetWorker, /encodeURIComponent\(destination\.href\)/);
   assert.match(app, /async function reopenClosedTab\(\)/);
   assert.match(app, /keys: "Ctrl\+Shift\+T"/);
