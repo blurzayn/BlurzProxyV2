@@ -41,6 +41,8 @@ const shortcutBindingList = document.getElementById("shortcut-binding-list");
 const closeBrowserButton = document.getElementById("close-browser");
 const bookmarkFeedback = document.getElementById("bookmark-feedback");
 const copyAddressButton = document.getElementById("copy-address");
+const pokiDiagnosticsButton = document.getElementById("poki-diagnostics");
+const pokiDiagnosticOutput = document.getElementById("poki-diagnostic-output");
 const browserActionFeedback = document.getElementById("browser-action-feedback");
 const settingsButton = document.getElementById("settings-button");
 const settingsPanel = document.getElementById("settings-panel");
@@ -1788,6 +1790,86 @@ function exportSettings() {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+
+function updatePokiDiagnosticsAvailability(tab = getActiveTab()) {
+  let isPoki = false;
+  try {
+    isPoki = Boolean(tab?.url && new URL(tab.url).hostname === "poki.com" ||
+      tab?.url && new URL(tab.url).hostname.endsWith(".poki.com"));
+  } catch {}
+  pokiDiagnosticsButton.hidden = !isPoki;
+  if (!isPoki) {
+    pokiDiagnosticOutput.hidden = true;
+    pokiDiagnosticOutput.textContent = "";
+  }
+}
+
+async function runPokiDiagnostics() {
+  const tab = getActiveTab();
+  if (!tab || pokiDiagnosticsButton.hidden) return;
+
+  const lines = [
+    "BlurzProxy Poki diagnostics",
+    `Page: ${tab.url}`,
+    `Checked: ${new Date().toISOString()}`
+  ];
+
+  try {
+    const doc = tab.iframe.contentDocument;
+    if (!doc) throw new Error("The proxied page document is not accessible yet.");
+    lines.push(`Document ready state: ${doc.readyState}`);
+    lines.push(`Page title: ${doc.title || "(none)"}`);
+    lines.push(`Viewport: ${doc.documentElement.clientWidth}x${doc.documentElement.clientHeight}`);
+
+    const images = [...doc.images];
+    const loaded = images.filter((img) => img.complete && img.naturalWidth > 0).length;
+    const broken = images.filter((img) => img.complete && img.naturalWidth === 0).length;
+    const pending = images.length - loaded - broken;
+    lines.push(`Images: ${images.length} total; ${loaded} loaded; ${broken} failed; ${pending} pending`);
+
+    images.slice(0, 30).forEach((img, index) => {
+      const style = doc.defaultView.getComputedStyle(img);
+      const rect = img.getBoundingClientRect();
+      let sourceHost = "(inline or unavailable)";
+      try {
+        sourceHost = new URL(img.currentSrc || img.src).hostname;
+      } catch {}
+      const parentText = (img.parentElement?.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 90);
+      lines.push(
+        `Image ${index + 1}: ${img.complete && img.naturalWidth > 0 ? "loaded" : img.complete ? "failed" : "pending"}; ${img.naturalWidth}x${img.naturalHeight}; host=${sourceHost}; display=${style.display}; visibility=${style.visibility}; opacity=${style.opacity}; rect=${Math.round(rect.width)}x${Math.round(rect.height)}; alt=${(img.alt || "").slice(0, 80)}; nearby text=${parentText || "(none)"}`
+      );
+    });
+
+    const backgroundImages = [...doc.querySelectorAll("body *")]
+      .filter((element) => {
+        const value = doc.defaultView.getComputedStyle(element).backgroundImage;
+        return value && value !== "none";
+      })
+      .slice(0, 20);
+    lines.push(`Elements with CSS background images (first 20): ${backgroundImages.length}`);
+    backgroundImages.forEach((element, index) => {
+      const style = doc.defaultView.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const text = (element.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 90);
+      lines.push(
+        `Background ${index + 1}: display=${style.display}; visibility=${style.visibility}; opacity=${style.opacity}; rect=${Math.round(rect.width)}x${Math.round(rect.height)}; text=${text || "(none)"}`
+      );
+    });
+  } catch (error) {
+    lines.push(`Diagnostic error: ${error.message}`);
+  }
+
+  const report = lines.join("\\n");
+  pokiDiagnosticOutput.textContent = report;
+  pokiDiagnosticOutput.hidden = false;
+  try {
+    await navigator.clipboard.writeText(report);
+    showBrowserActionFeedback("Poki diagnostics copied. Paste the report into this chat.", false);
+  } catch {
+    showBrowserActionFeedback("Poki diagnostics are displayed below the toolbar. Select and copy the report.", false);
+  }
+}
+
 function getActiveTab() {
   return tabs.find((tab) => tab.id === activeTabId);
 }
@@ -1861,6 +1943,7 @@ function activateTab(id) {
   address.value = tab.url;
   welcome.hidden = Boolean(tab.url);
   updateBookmarkButton();
+  updatePokiDiagnosticsAvailability(tab);
   browser.hidden = false;
   home.hidden = true;
   renderTabs();
@@ -1937,6 +2020,7 @@ function createTab({ activate = true, persist = true } = {}) {
     }
 
     if (activeTabId === tab.id) {
+      updatePokiDiagnosticsAvailability(tab);
       tab.container.hidden = false;
       address.value = tab.url;
       welcome.hidden = true;
@@ -2116,6 +2200,7 @@ async function navigate(value, openInNewTab = linkBehaviorSelect.value === "new"
     setTabLoadState(tab, "loading", "Loading page…");
     renderTabs();
     updateBookmarkButton();
+    updatePokiDiagnosticsAvailability(tab);
     saveOpenTabs();
     try {
       tab.frame.go(destination.href);
@@ -2199,6 +2284,7 @@ newTabButton.addEventListener("click", async () => {
 });
 
 copyAddressButton.addEventListener("click", copyCurrentAddress);
+pokiDiagnosticsButton.addEventListener("click", runPokiDiagnostics);
 closeOtherTabsButton.addEventListener("click", closeOtherTabs);
 
 closeBrowserButton.addEventListener("click", () => {
